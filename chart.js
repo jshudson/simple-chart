@@ -26,12 +26,14 @@ const convertToPath = (points) => {
 }
 
 const SVGString = (points, viewBox) => {
-    return `<path
+    return `
+    <path
         fill="none"
         stroke="#0074d9"
         stroke-width="1px"
         d=${convertToPath(scaleDataToSVG(points, viewBox))}
-    />`
+    />
+    `
 }
 
 const data = [
@@ -1391,9 +1393,19 @@ const data = [
 ]
 
 const svg = document.getElementById('test');
+const rectBox = {
+    active: false,
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: 0
+}
+
 const points = xyToObject(data)
 
 const resizeDiv = document.getElementById('graph')
+
+
 
 const resizeObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
@@ -1401,7 +1413,7 @@ const resizeObserver = new ResizeObserver((entries) => {
             const contentBoxSize = entry.contentBoxSize[0];
             console.log(contentBoxSize)
             const viewBox = {
-                width: contentBoxSize.inlineSize-10,
+                width: contentBoxSize.inlineSize - 10,
                 height: contentBoxSize.blockSize,
                 xMin: 0,
                 xMax: contentBoxSize.inlineSize,
@@ -1410,7 +1422,8 @@ const resizeObserver = new ResizeObserver((entries) => {
             }
             svg.style.width = contentBoxSize.inlineSize - 10 + "px"
             svg.style.height = contentBoxSize.blockSize - 10 + "px"
-            svg.innerHTML = SVGString(points, viewBox)
+            const plot = document.getElementById('plot');
+            plot.innerHTML = SVGString(points, viewBox)
         }
     }
 
@@ -1421,9 +1434,50 @@ console.log(resizeObserver.observe(resizeDiv));
 
 
 
-
-svg.onclick = ev => {
-    console.log(ev.offsetX)
+svg.oncontextmenu = ev => {
+    ev.preventDefault();
 }
+svg.onmousedown = ev => {
+    ev.preventDefault()
+    console.log(ev);
+    if (ev.buttons === 1) {
+        rectBox.active = true
+        rectBox.x1 = rectBox.x2 = ev.offsetX
+        rectBox.y1 = rectBox.y2 = ev.offsetY
+        console.log(rectBox);
+    }
+}
+svg.onmouseup = e => {
+    e.preventDefault()
+    rectBox.active = false
+    console.log('hi"')
+    const rect = document.getElementById('rect');
+    rect.innerHTML='';
+    
+}
+const drawRect = (element, rectBox) => {
+    const width = Math.abs(rectBox.x2 - rectBox.x1)
+    const height = Math.abs(rectBox.y2 - rectBox.y1)
+    const x = Math.min(rectBox.x1, rectBox.x2);
+    const y = Math.min(rectBox.y1, rectBox.y2);
+    const rect = `
+    <rect 
+        x="${x}"
+        y="${y}" 
+        width="${width}" 
+        height="${height}"
+    />`
+    element.innerHTML = rect
+    console.log('drawing');
+}
+svg.onmousemove = ev => {
+    if (rectBox.active) {
+        rectBox.x2 = ev.offsetX
+        rectBox.y2 = ev.offsetY
+        const rect = document.getElementById('rect');
+        drawRect(rect, rectBox)
+    }
+}
+
 
 
