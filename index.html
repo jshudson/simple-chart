@@ -9,29 +9,38 @@
     <style>
         svg {
             outline: 1px solid black;
-            
+
         }
-        
+
         .graph {
-            height: 100px;
+            height: 400px;
             max-height: 600px;
             resize: both;
-            overflow:auto;
+            overflow: hidden;
             outline: 1px solid orange;
         }
-        </style>
+
+        path {
+            fill: none;
+            stroke: #0074d9;
+            stroke-width: 1px;
+        }
+    </style>
+    <script src="./chart.js" type="module" defer></script>
 </head>
 
 <body>
     <div id="graph" class="graph">
         <svg id="test" xmlns="http://www.w3.org/2000/svg">
+            <clipPath id="plot-clip">
+                <rect x="0" y="30" height="200vh" width="200vw"></rect>
+            </clipPath> 
             <g id="plot"></g>
             <g id="rect"></g>
         </svg>
-        
+
     </div>
-    
-    <script src="./chart.js" defer></script>
+
 </body>
 
 </html>
