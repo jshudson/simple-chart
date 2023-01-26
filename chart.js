@@ -10,7 +10,7 @@ const scalePoints = (points, plotMin, plotMax, scaleMin, scaleMax) => {
 
 const scaleDataToSVG = (points, limits, svgDimensions) => {
 
-    svgDimensions.height = svgDimensions.height
+    // svgDimensions.height = svgDimensions.height
     let yMin = svgDimensions.height - svgDimensions.yMin
     let yMax = svgDimensions.height - svgDimensions.yMax
     const scaleX = scalePoints(points.x, limits.x1, limits.x2, svgDimensions.xMin, svgDimensions.xMax);
@@ -71,8 +71,6 @@ const getLimits = (points) => {
     return limits
 }
 
-
-
 const svg = document.getElementById('test');
 
 const rectBox = {
@@ -85,8 +83,8 @@ const rectBox = {
 
 const points = xyToObject(data)
 const limits = getLimits(points)
-limits.y2 /= 4;
-limits.x2 = 26;
+// limits.y2 /= 4;
+// limits.x2 = 26;
 const resizeDiv = document.getElementById('graph')
 
 
@@ -104,13 +102,13 @@ const resizeObserver = new ResizeObserver((entries) => {
 
     };
 })
+const pad = 10;
 
 const updateSVGDimensions = (newSize) => {
     if (
         Math.abs(newSize.width - oldSize.width) < 2 &&
         Math.abs(newSize.height - oldSize.height) < 2) return;
 
-    const pad = 30;
 
     const plotDimensions = {
         width: newSize.width - pad,
@@ -151,6 +149,10 @@ svg.onmousedown = e => {
         rectBox.y1 = rectBox.y2 = e.offsetY
     }
 }
+
+const getLimitsFromRect = (plotDimensions) => {
+
+}
 svg.onmouseup = e => {
     e.preventDefault()
     rectBox.active = false
@@ -158,6 +160,10 @@ svg.onmouseup = e => {
     const rect = document.getElementById('rect');
     rect.innerHTML = '';
 
+    console.log(svg.getBBox());
+    // limits = getLimitsFromRect(plotDimensions)
+    let { active: _, ...limits } = rectBox
+    console.log(limits);
 }
 const drawRect = (element, rectBox) => {
     const width = Math.abs(rectBox.x2 - rectBox.x1)
@@ -165,14 +171,21 @@ const drawRect = (element, rectBox) => {
     const x = Math.min(rectBox.x1, rectBox.x2);
     const y = Math.min(rectBox.y1, rectBox.y2);
     const rect = `
-        < rect
-    x = "${x}"
-    y = "${y}"
-    width = "${width}"
-    height = "${height}"
-        /> `
+    <rect
+        x = "${x}"
+        y = "${y}"
+        width = "${width}"
+        height = "${height}"
+    /> `
     element.innerHTML = rect
-    console.log('drawing');
+    console.log(rect);
+}
+svg.onmouseleave = e => {
+    e.preventDefault()
+    rectBox.active = false
+    console.log('out')
+    const rect = document.getElementById('rect');
+    rect.innerHTML = '';
 }
 svg.onmousemove = ev => {
     if (rectBox.active) {
