@@ -56,7 +56,6 @@ class Chart {
      * @param {*} screenMax - Maximum screen coordinate referenced to the SVG
      * @returns Array values scaled to the provided coordinate system
      */
-
     scaleArrayToScreen(array, plotMin, plotMax, screenMin, screenMax) {
         return array.map(i => ((i - plotMin) * (screenMax - screenMin) / (plotMax - plotMin) + screenMin))
     }
@@ -116,12 +115,12 @@ class Chart {
     }
     SVGString(points, limits, svgDimensions) {
         return `
-            <path
-        d = ${convertToPath(scaleDataToSVG(points, limits, svgDimensions), svgDimensions)}
-        clip-path="url(#plot-clip)"/>
-            `
+        <path
+            d = ${convertToPath(scaleDataToSVG(points, limits, svgDimensions), svgDimensions)}
+            clip-path="url(#plot-clip)"
+        />`
     }
-    getLimits(points) {
+    getDataRange(points) {
         const x1 = Math.min(...points.x)
         const x2 = Math.max(...points.x)
         const y1 = Math.min(...points.y)
