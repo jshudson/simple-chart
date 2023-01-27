@@ -1,31 +1,35 @@
 class Chart {
     constructor(div) {
 
+        this.element = div
+
         this.plotRange = {
             x1: 0,
             x2: 100,
             y1: 0,
             y2: 100
         }
-
         this.plotScreenDimensions = {
             pad: 10,
-            width: 800,
-            height: 400,
+            width: this.element.offsetWidth,
+            height: this.element.offsetHeight,
         }
 
         this.data = [];
 
-        this.element = div
+        this.initializeResizeObserver();
+        this.resizeObserver.observe(this.element);
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', this.plotScreenDimensions.width)
+        svg.setAttribute('height', this.plotScreenDimensions.height)
 
         const plotClip = this.appendNewElement(svg, 'clipPath', {
             id: 'plot-clip'
         })
 
-        const clipRect = plotClip.appendChild(this.createRectangle(0, this.plotScreenDimensions.pad, '200vh', '200vw','clip-rect'))
-
+        const clipRect = plotClip.appendChild(this.createRectangle(0, this.plotScreenDimensions.pad, '200vh', '200vw', 'clip-rect'))
+        console.log(clipRect);
         svg.innerHTML += `
         <g id="plot"></g>
         <g id="rect"></g>
@@ -35,6 +39,17 @@ class Chart {
 
     }
 
+    resize() {
+        this.plotScreenDimensions = {
+            ...this.plotScreenDimensions,
+            width: this.element.offsetWidth,
+            height: this.element.offsetHeight,
+        }
+        this.chart.style.width = this.plotScreenDimensions.width
+        this.chart.style.height = this.plotScreenDimensions.height
+        if (this.hasData) this.updatePlot();
+        return true
+    }
     appendNewElement(parent, tagName, attributes) {
         const child = document.createElement(tagName)
         Object.keys(attributes).forEach(key => {
@@ -61,6 +76,7 @@ class Chart {
      * @param {Object} options - display options for the plot
      */
     addPlot(points, options) {
+        this.hasData = true;
         this.data = [...this.data, points];
         console.log(this.data);
     }
@@ -208,9 +224,19 @@ class Chart {
      * Update the plot
      */
     updatePlot() {
+        if (!this.hasData) return;
         this.plotRange = this.getDataRange(this.data[0]);
         this.plot.innerHTML = this.getPathString(this.data[0]);
     }
+    initializeResizeObserver() {
+        this.resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (!entry.contentBoxSize) return
+                this.resize();
+            };
+        })
+    }
 }
+
 
 export default Chart;
