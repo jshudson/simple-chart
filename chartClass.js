@@ -19,10 +19,14 @@ class Chart {
         this.element = div
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.innerHTML = `
-        <clipPath id="plot-clip">
-            <rect x="0" y="${this.plotScreenDimensions.pad}" height="200vh" width="200vw"></rect>
-        </clipPath> 
+
+        const plotClip = this.appendNewElement(svg, 'clipPath', {
+            id: 'plot-clip'
+        })
+
+        const clipRect = plotClip.appendChild(this.createRectangle(0, this.plotScreenDimensions.pad, '200vh', '200vw','clip-rect'))
+
+        svg.innerHTML += `
         <g id="plot"></g>
         <g id="rect"></g>
         `
@@ -31,6 +35,24 @@ class Chart {
 
     }
 
+    appendNewElement(parent, tagName, attributes) {
+        const child = document.createElement(tagName)
+        Object.keys(attributes).forEach(key => {
+            child.setAttribute(key, attributes[key])
+        })
+        parent.appendChild(child);
+        return child;
+    }
+
+    createRectangle(x, y, height, width, id) {
+        const rect = document.createElement('rect');
+        rect.setAttribute('x', x);
+        rect.setAttribute('y', y);
+        rect.setAttribute('height', height);
+        rect.setAttribute('width', width);
+        if (id) rect.setAttribute('id', id)
+        return rect;
+    }
     /**
      * Add a plot to the chart
      * @param {Object} points - collection of xy data
@@ -65,7 +87,7 @@ class Chart {
     pointsToSVGPath(points) {
         const scaledPoints = this.scalePointsToScreen(points);
         const screenCoords = this.plotScreenCoordinates
-        
+
         let prevInGraph = false, curInGraph, nextInGraph = true;
 
         let command, x, y, ny;
@@ -96,16 +118,16 @@ class Chart {
     }
 
     /**
-     * Scale array values to SVG screen coordinates
+     * Scale array values to a new coordinate system
      * @param {Array} array - 1D array of values
-     * @param {number} plotMin - Minimum value of the plotted data
-     * @param {number} plotMax - Maximum value of the plotted data
-     * @param {number} screenMin - Minimum screen coordinate referenced to the SVG
-     * @param {number} screenMax - Maximum screen coordinate referenced to the SVG
+     * @param {number} originalMin - Minimum value of the original scale
+     * @param {number} originalMax - Maximum value of the original scale
+     * @param {number} scaledMin - Minimum value of the target scale
+     * @param {number} scaledMax - Maximum value of the target scale
      * @returns {Array} Array values scaled to the provided coordinate system
      */
-    scaleArrayToScreen(array, plotMin, plotMax, screenMin, screenMax) {
-        return array.map(i => ((i - plotMin) * (screenMax - screenMin) / (plotMax - plotMin) + screenMin))
+    swapScale(array, originalMin, originalMax, scaledMin, scaledMax) {
+        return array.map(e => ((e - originalMin) * (scaledMax - scaledMin) / (originalMax - originalMin) + scaledMin))
     }
 
     /**
@@ -118,8 +140,8 @@ class Chart {
     scalePointsToScreen(points) {
         const screenCoords = this.plotScreenCoordinates
 
-        const scaleX = this.scaleArrayToScreen(points.x, this.plotRange.x1, this.plotRange.x2, screenCoords.x1, screenCoords.x2);
-        const scaleY = this.scaleArrayToScreen(points.y, this.plotRange.y1, this.plotRange.y2, screenCoords.y2, screenCoords.y1);
+        const scaleX = this.swapScale(points.x, this.plotRange.x1, this.plotRange.x2, screenCoords.x1, screenCoords.x2);
+        const scaleY = this.swapScale(points.y, this.plotRange.y1, this.plotRange.y2, screenCoords.y2, screenCoords.y1);
 
         return { x: scaleX, y: scaleY }
     }
@@ -135,7 +157,7 @@ class Chart {
             y > this.plotScreenCoordinates.y2
         )
     }
-    
+
     /**
      * Gives a path command string based on surrounding points visibility in the plot
      * @param {number} x x-coordinate
