@@ -39,6 +39,8 @@ class Chart {
 
     }
 
+    // #region Chart Functions
+
     resize() {
         this.plotScreenDimensions = {
             ...this.plotScreenDimensions,
@@ -50,6 +52,18 @@ class Chart {
         if (this.hasData) this.updatePlot();
         return true
     }
+
+    /**
+     * Update the plot
+     */
+    updatePlot() {
+        if (!this.hasData) return;
+        this.plotRange = this.getDataRange(this.data[0]);
+        this.plot.innerHTML = this.getPathString(this.data[0]);
+    }
+    //#endregion
+
+    // #region DOM utilities
     appendNewElement(parent, tagName, attributes) {
         const child = document.createElement(tagName)
         Object.keys(attributes).forEach(key => {
@@ -58,7 +72,6 @@ class Chart {
         parent.appendChild(child);
         return child;
     }
-
     createRectangle(x, y, height, width, id) {
         const rect = document.createElement('rect');
         rect.setAttribute('x', x);
@@ -68,6 +81,9 @@ class Chart {
         if (id) rect.setAttribute('id', id)
         return rect;
     }
+    // #endregion
+
+    // #region Plot Data Management
     /**
      * Add a plot to the chart
      * @param {Object} points - collection of xy data
@@ -81,6 +97,24 @@ class Chart {
         console.log(this.data);
     }
 
+    /**
+     * Gets the total data range of a point collection
+     * @param {Object} points - collection of xy data
+     * @param {Array} points.x - list of x values
+     * @param {Array} points.y - list of y values
+     * @returns {Object} Max and min values of x and y lists
+     */
+    getDataRange(points) {
+        const x1 = Math.min(...points.x)
+        const x2 = Math.max(...points.x)
+        const y1 = Math.min(...points.y)
+        const y2 = Math.max(...points.y)
+        const limits = { x1, x2, y1, y2 }
+        return limits
+    }
+    // #endregion
+
+    // #region Plot Data Scaling
     /**
      * Get screen coordinates for plot region
      */
@@ -98,7 +132,7 @@ class Chart {
      * @param {Object} points - collection of xy data
      * @param {number[]} points.x - list of x values
      * @param {number[]} points.y - list of y values
-     * @returns 
+     * @returns
      */
     pointsToSVGPath(points) {
         const scaledPoints = this.scalePointsToScreen(points);
@@ -161,7 +195,9 @@ class Chart {
 
         return { x: scaleX, y: scaleY }
     }
+    //#endregion
 
+    // #region SVG Utilities
     /**
      * Check if a y point is within the vertical scale of the plot
      * @param {number} y Value
@@ -203,31 +239,10 @@ class Chart {
             clip-path="url(#plot-clip)"
         />`
     }
+    //#endregion
 
-    /**
-     * Gets the total data range of a point collection
-     * @param {Object} points - collection of xy data
-     * @param {Array} points.x - list of x values
-     * @param {Array} points.y - list of y values
-     * @returns {Object} Max and min values of x and y lists
-     */
-    getDataRange(points) {
-        const x1 = Math.min(...points.x)
-        const x2 = Math.max(...points.x)
-        const y1 = Math.min(...points.y)
-        const y2 = Math.max(...points.y)
-        const limits = { x1, x2, y1, y2 }
-        return limits
-    }
 
-    /**
-     * Update the plot
-     */
-    updatePlot() {
-        if (!this.hasData) return;
-        this.plotRange = this.getDataRange(this.data[0]);
-        this.plot.innerHTML = this.getPathString(this.data[0]);
-    }
+    // #region Events
     initializeResizeObserver() {
         this.resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
@@ -236,6 +251,7 @@ class Chart {
             };
         })
     }
+    // #endregion
 }
 
 
