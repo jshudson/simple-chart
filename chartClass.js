@@ -1,14 +1,129 @@
 const SVGNS = 'http://www.w3.org/2000/svg'
+// #region Utils
+/**
+ * The base implementation of `_.clamp` which doesn't coerce arguments.
+ *
+ * @private
+ * @param {number} number The number to clamp.
+ * @param {number} [lower] The lower bound.
+ * @param {number} upper The upper bound.
+ * @returns {number} Returns the clamped number.
+ */
+function baseClamp(number, lower, upper) {
+    if (number === number) {
+        if (upper !== undefined) {
+            number = number <= upper ? number : upper;
+        }
+        if (lower !== undefined) {
+            number = number >= lower ? number : lower;
+        }
+    }
+    return number;
+}
+/**
+ * Clamps `number` within the inclusive `lower` and `upper` bounds.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Number
+ * @param {number} number The number to clamp.
+ * @param {number} [lower] The lower bound.
+ * @param {number} upper The upper bound.
+ * @returns {number} Returns the clamped number.
+ * @example
+ *
+ * _.clamp(-10, -5, 5);
+ * // => -5
+ *
+ * _.clamp(10, -5, 5);
+ * // => 5
+ */
+function clamp(number, lower, upper) {
+    if (upper === undefined) {
+        upper = lower;
+        lower = undefined;
+    }
+    if (upper !== undefined) {
+        upper = toNumber(upper);
+        upper = upper === upper ? upper : 0;
+    }
+    if (lower !== undefined) {
+        lower = toNumber(lower);
+        lower = lower === lower ? lower : 0;
+    }
+    return baseClamp(toNumber(number), lower, upper);
+}
+/**
+ * Converts `value` to a number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {number} Returns the number.
+ * @example
+ *
+ * _.toNumber(3.2);
+ * // => 3.2
+ *
+ * _.toNumber(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toNumber(Infinity);
+ * // => Infinity
+ *
+ * _.toNumber('3.2');
+ * // => 3.2
+ */
+function toNumber(value) {
+    if (typeof value == 'number') {
+        return value;
+    }
+    if (isSymbol(value)) {
+        return NAN;
+    }
+    if (isObject(value)) {
+        var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
+        value = isObject(other) ? (other + '') : other;
+    }
+    if (typeof value != 'string') {
+        return value === 0 ? value : +value;
+    }
+    value = value.replace(reTrim, '');
+    var isBinary = reIsBinary.test(value);
+    return (isBinary || reIsOctal.test(value))
+        ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+        : (reIsBadHex.test(value) ? NAN : +value);
+}
+// #endregion
+
 class Chart {
     constructor(div) {
 
         this.element = div
 
+        this.initializePlotVariables();
+
+        this.createChart();
+        this.createClip();
+        this.createPlotGroup();
+        this.createZoomGroup();
+
+        this.bindEvents();
+    }
+
+    // #region Constructor Helpers
+    /**
+     * Set initial plot state
+     */
+    initializePlotVariables() {
         this.plotRange = {
             x1: 0,
-            x2: 6,
-            y1: -3,
-            y2: 20
+            x2: 0,
+            y1: 0,
+            y2: 0
         }
 
         this.plotScreenDimensions = {
@@ -19,14 +134,21 @@ class Chart {
 
         this.data = [];
         this.strokeWidth = 3;
+    }
 
-        this.initializeResizeObserver();
-        this.resizeObserver.observe(this.element);
-
+    /**
+     * Create SVG element for drawing the chart
+     */
+    createChart() {
         this.chart = this.element.appendChild(document.createElementNS(SVGNS, 'svg'));
         this.chart.setAttribute('width', this.plotScreenDimensions.width)
         this.chart.setAttribute('height', this.plotScreenDimensions.height)
+    }
 
+    /**
+     * Create clip rectangle for constraining plots
+     */
+    createClip() {
         this.plotClip = this.appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
 
         this.clipRect = this.plotClip.appendChild(
@@ -36,9 +158,18 @@ class Chart {
                 this.plotScreenCoordinates.x2 - this.plotScreenDimensions.pad + this.strokeWidth,
                 this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth,
                 'clip-rect'))
+    }
 
+    /**
+     * Create plot group for path elements
+     */
+    createPlotGroup() {
         this.plot = this.appendNewElement(this.chart, 'g', { id: 'plot' }, SVGNS)
-
+    }
+    /**
+     * Create zoom group for the zoom rectangle
+     */
+    createZoomGroup() {
         this.zoomRect = {
             group: this.appendNewElement(this.chart, 'g', { id: 'zoom-rect' }, SVGNS),
             rectangle: undefined,
@@ -49,18 +180,50 @@ class Chart {
             y2: 0
         }
 
+        //temporary for debuging
         this.appendNewElement(this.zoomRect.group, 'g', { id: 'moose' }, SVGNS)
+    }
 
-        //event handlers
-        this.chart.onmousedown = this.handleClick.bind(this);
-        this.chart.onmouseup = this.handleMouseUp.bind(this);
-        this.chart.onmousemove = this.handleMouseMove.bind(this);
-        this.chart.onmouseleave = this.handleMouseLeave.bind(this);
+    /**
+     * Bind event handlers
+     */
+    bindEvents() {
+        //resizing
+        this.initializeResizeObserver();
+        this.resizeObserver.observe(this.element);
+
+        //mouse handlers
+        window.onmousedown = this.handleClick.bind(this);
+        // this.chart.onmousedown = this.handleClick.bind(this);
+        //this.chart.onmouseup = this.handleMouseUp.bind(this);
+        window.onmouseup = this.handleMouseUp.bind(this);
+        window.onmousemove = this.handleMouseMove.bind(this);
+        // this.chart.onmousemove = this.handleMouseMove.bind(this);
+        // this.chart.onmouseleave = this.handleMouseLeave.bind(this);
         this.chart.ondblclick = this.handleDoubleClick.bind(this);
     }
+    // #endregion
 
     // #region Chart Update Functions
 
+    /**
+     * Update the plot
+     */
+    updatePlot() {
+        if (!this.hasData) return;
+        this.updatePlotLimits();
+        this.plot.innerHTML = ''
+        let i = 0;
+        this.data.forEach(e => {
+            this.appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(#plot-clip)', class: `plot${i++}` }, SVGNS)
+        })
+    }
+    resetPlot() {
+        console.log(this.plotRange);
+        this.updatePlotLimits();
+        this.plotRange = { ...this.plotLimits }
+        console.log(this.plotRange);
+    }
     resize() {
         this.updatePlotScreenDimensions();
         this.resizeChart();
@@ -87,20 +250,11 @@ class Chart {
         this.clipRect.setAttribute('height', Math.max(0, this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth))
     }
 
-    /**
-     * Update the plot
-     */
-    updatePlot() {
-        if (!this.hasData) return;
-        // this.plotRange = this.getDataRange(this.data[0]);
-        this.plot.innerHTML = this.getPathString(this.data[0]);
-    }
     //#endregion
 
     // #region DOM utilities
     appendNewElement(parent, tagName, attributes, NS) {
         const child = NS ? document.createElementNS(NS, tagName) : document.createElement(tagName)
-        console.log(child);
         Object.keys(attributes).forEach(key => {
             child.setAttribute(key, attributes[key])
         })
@@ -129,8 +283,6 @@ class Chart {
     addPlot(points, options) {
         this.hasData = true;
         this.data = [...this.data, points];
-        console.log(this.data);
-        console.log(this.getDataRange(this.data[0]));
     }
 
     /**
@@ -145,9 +297,22 @@ class Chart {
         const x2 = Math.max(...points.x)
         const y1 = Math.min(...points.y)
         const y2 = Math.max(...points.y)
-        const limits = { x1, x2, y1, y2 }
-        return limits
+        const range = { x1, x2, y1, y2 }
+        return range
     }
+
+    updatePlotLimits() {
+        const plotLimits = this.data.reduce((acc, cur) => {
+            const curRange = this.getDataRange(cur)
+            const x1 = Math.min(acc.x1, curRange.x1)
+            const x2 = Math.max(acc.x2, curRange.x2)
+            const y1 = Math.min(acc.y1, curRange.y1)
+            const y2 = Math.max(acc.y2, curRange.y2)
+            return { x1, x2, y1, y2 }
+        }, this.getDataRange(this.data[0]))
+        this.plotLimits = { ...plotLimits }
+    }
+
     // #endregion
 
     // #region Plot Data Scaling
@@ -298,10 +463,10 @@ class Chart {
     // #region Zoom Rectangle Handling
     updateZoomRectangle() {
         console.log(this.zoomRect.rectangle);
-        const width = Math.abs(this.zoomRect.x2 - this.zoomRect.x1)
-        const height = Math.abs(this.zoomRect.y2 - this.zoomRect.y1)
         const x = Math.min(this.zoomRect.x1, this.zoomRect.x2);
         const y = Math.min(this.zoomRect.y1, this.zoomRect.y2);
+        const width = Math.abs(this.zoomRect.x2 - this.zoomRect.x1)
+        const height = Math.abs(this.zoomRect.y2 - this.zoomRect.y1)
         this.zoomRect.rectangle.setAttribute('width', width)
         this.zoomRect.rectangle.setAttribute('height', height)
         this.zoomRect.rectangle.setAttribute('x', x)
@@ -320,22 +485,30 @@ class Chart {
     }
 
     handleClick(e) {
-        const loc = { x: e.offsetX, y: e.offsetY }
+        if (this.chart.contains(e.target)) {
+            console.log(e.offsetX)
+            console.log('in chart');
+            const loc = { x: e.offsetX, y: e.offsetY }
 
-        this.zoomRect.active = true;
-        this.zoomRect.x1 = this.zoomRect.x2 = loc.x;
-        this.zoomRect.y1 = this.zoomRect.y2 = loc.y;
-        this.zoomRect.rectangle = this.zoomRect.group.appendChild(this.createRectangle(loc.x, loc.y, 0, 0))
-        this.zoomRect.rectangle.setAttribute('id', 'rect')
+            this.zoomRect.active = true;
+            this.zoomRect.x1 = this.zoomRect.x2 = loc.x;
+            this.zoomRect.y1 = this.zoomRect.y2 = loc.y;
+            this.zoomRect.rectangle = this.zoomRect.group.appendChild(this.createRectangle(loc.x, loc.y, 0, 0))
+            this.zoomRect.rectangle.setAttribute('id', 'rect')
+        }
     }
 
     handleMouseMove(e) {
+        // if (!this.chart.contains(e.target)) return
+
         e.preventDefault()
         if (this.zoomRect.active) {
-            this.zoomRect.x2 = e.offsetX
-            this.zoomRect.y2 = e.offsetY
+            const { pad, width, height } = this.plotScreenDimensions
+            this.zoomRect.x2 = clamp(e.offsetX, pad, width - pad) //Math.max(pad, Math.min(e.offsetX, width - pad))
+            this.zoomRect.y2 = clamp(e.offsetY, pad, height - pad) //Math.max(pad, Math.min(e.offsetY, height - pad))
             this.updateZoomRectangle();
         }
+
     }
 
     handleMouseLeave(e) {
@@ -347,10 +520,13 @@ class Chart {
     }
 
     handleMouseUp(e) {
+        // if (!this.chart.contains(e.target)) return
+
         e.preventDefault()
 
         const width = Number(this.zoomRect.rectangle.getAttribute('width'))
         const height = Number(this.zoomRect.rectangle.getAttribute('height'))
+        console.log(width, height);
         this.zoomRect.rectangle.remove()
 
         if (width === 0 || height === 0) {
@@ -373,7 +549,7 @@ class Chart {
 
     handleDoubleClick(e) {
         e.preventDefault();
-        this.plotRange = this.getDataRange(this.data[0]);
+        this.plotRange = { ...this.plotLimits }
         this.updatePlot();
     }
     // #endregion
