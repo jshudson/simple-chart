@@ -98,7 +98,9 @@ function toNumber(value) {
         : (reIsBadHex.test(value) ? NAN : +value);
 }
 // #endregion
-
+const spanx = document.getElementById('x')
+const spany = document.getElementById('y')
+const objectOut = document.getElementById('object')
 class Chart {
     constructor(div) {
 
@@ -499,13 +501,16 @@ class Chart {
     }
 
     handleMouseMove(e) {
-        // if (!this.chart.contains(e.target)) return
+
+        //get relative position to the div
+        const relX = e.clientX - this.element.getBoundingClientRect().left;
+        const relY = e.clientY - this.element.getBoundingClientRect().top;
 
         e.preventDefault()
         if (this.zoomRect.active) {
             const { pad, width, height } = this.plotScreenDimensions
-            this.zoomRect.x2 = clamp(e.offsetX, pad, width - pad) //Math.max(pad, Math.min(e.offsetX, width - pad))
-            this.zoomRect.y2 = clamp(e.offsetY, pad, height - pad) //Math.max(pad, Math.min(e.offsetY, height - pad))
+            this.zoomRect.x2 = clamp(relX, pad, width - pad) //Math.max(pad, Math.min(e.offsetX, width - pad))
+            this.zoomRect.y2 = clamp(relY, pad, height - pad) //Math.max(pad, Math.min(e.offsetY, height - pad))
             this.updateZoomRectangle();
         }
 
@@ -537,6 +542,7 @@ class Chart {
 
         if (this.zoomRect.active) {
             this.zoomRect.active = false;
+            
             const screenCoords = this.plotScreenCoordinates
             const sortedCoords = this.sortCoords(this.zoomRect)
 
