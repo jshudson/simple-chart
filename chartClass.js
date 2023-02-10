@@ -1,103 +1,6 @@
 const SVGNS = 'http://www.w3.org/2000/svg'
-// #region Utils
-/**
- * The base implementation of `_.clamp` which doesn't coerce arguments.
- *
- * @private
- * @param {number} number The number to clamp.
- * @param {number} [lower] The lower bound.
- * @param {number} upper The upper bound.
- * @returns {number} Returns the clamped number.
- */
-function baseClamp(number, lower, upper) {
-    if (number === number) {
-        if (upper !== undefined) {
-            number = number <= upper ? number : upper;
-        }
-        if (lower !== undefined) {
-            number = number >= lower ? number : lower;
-        }
-    }
-    return number;
-}
-/**
- * Clamps `number` within the inclusive `lower` and `upper` bounds.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Number
- * @param {number} number The number to clamp.
- * @param {number} [lower] The lower bound.
- * @param {number} upper The upper bound.
- * @returns {number} Returns the clamped number.
- * @example
- *
- * _.clamp(-10, -5, 5);
- * // => -5
- *
- * _.clamp(10, -5, 5);
- * // => 5
- */
-function clamp(number, lower, upper) {
-    if (upper === undefined) {
-        upper = lower;
-        lower = undefined;
-    }
-    if (upper !== undefined) {
-        upper = toNumber(upper);
-        upper = upper === upper ? upper : 0;
-    }
-    if (lower !== undefined) {
-        lower = toNumber(lower);
-        lower = lower === lower ? lower : 0;
-    }
-    return baseClamp(toNumber(number), lower, upper);
-}
-/**
- * Converts `value` to a number.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to process.
- * @returns {number} Returns the number.
- * @example
- *
- * _.toNumber(3.2);
- * // => 3.2
- *
- * _.toNumber(Number.MIN_VALUE);
- * // => 5e-324
- *
- * _.toNumber(Infinity);
- * // => Infinity
- *
- * _.toNumber('3.2');
- * // => 3.2
- */
-function toNumber(value) {
-    if (typeof value == 'number') {
-        return value;
-    }
-    if (isSymbol(value)) {
-        return NAN;
-    }
-    if (isObject(value)) {
-        var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
-        value = isObject(other) ? (other + '') : other;
-    }
-    if (typeof value != 'string') {
-        return value === 0 ? value : +value;
-    }
-    value = value.replace(reTrim, '');
-    var isBinary = reIsBinary.test(value);
-    return (isBinary || reIsOctal.test(value))
-        ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
-        : (reIsBadHex.test(value) ? NAN : +value);
-}
-// #endregion
+import { clamp } from "./utils.js"
+
 const spanx = document.getElementById('x')
 const spany = document.getElementById('y')
 const objectOut = document.getElementById('object')
@@ -183,7 +86,7 @@ class Chart {
         }
 
         //temporary for debuging
-        this.appendNewElement(this.zoomRect.group, 'g', { id: 'moose' }, SVGNS)
+        this.appendNewElement(this.zoomRect.group, 'g', { id: 'temp' }, SVGNS)
     }
 
     /**
@@ -196,13 +99,10 @@ class Chart {
 
         //mouse handlers
         window.onmousedown = this.handleClick.bind(this);
-        // this.chart.onmousedown = this.handleClick.bind(this);
-        //this.chart.onmouseup = this.handleMouseUp.bind(this);
         window.onmouseup = this.handleMouseUp.bind(this);
         window.onmousemove = this.handleMouseMove.bind(this);
-        // this.chart.onmousemove = this.handleMouseMove.bind(this);
-        // this.chart.onmouseleave = this.handleMouseLeave.bind(this);
         this.chart.ondblclick = this.handleDoubleClick.bind(this);
+
     }
     // #endregion
 
@@ -219,12 +119,13 @@ class Chart {
         this.data.forEach(e => {
             this.appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(#plot-clip)', class: `plot${i++}` }, SVGNS)
         })
+        console.log('drawing plot');
     }
     resetPlot() {
-        console.log(this.plotRange);
+        // console.log(this.plotRange);
         this.updatePlotLimits();
         this.plotRange = { ...this.plotLimits }
-        console.log(this.plotRange);
+        // console.log(this.plotRange);
     }
     resize() {
         this.updatePlotScreenDimensions();
@@ -341,30 +242,25 @@ class Chart {
         const scaledPoints = this.scalePointsToScreen(points);
         const screenCoords = this.plotScreenCoordinates
 
-        let prevInGraph = false, curInGraph, nextInGraph = true;
+        // let prevInGraph = false, curInGraph, nextInGraph = true;
 
-        let command, x, y, ny;
+
+        let x, y //, ny;
+        let i = Math.max(scaledPoints.x.findIndex(e => e >= 0) - 1, 0); //goes to point offscreen to the left
+        x = scaledPoints.x[i]
 
         //first point is an M
-        let i = scaledPoints.x.findIndex(e => e >= 0);
-        x = scaledPoints.x[i]
-        let path = `M${scaledPoints.x[i]},${scaledPoints.y[i]}`;
+        let path = `M${x},${scaledPoints.y[i]}`;
         i++;
 
-        while (i < scaledPoints.x.length && x <= screenCoords.x2 && x >= 0) {
+        while (i < scaledPoints.x.length && x <= screenCoords.x2) { //<= is offscreen to right
             x = scaledPoints.x[i]
             y = scaledPoints.y[i]
-            ny = scaledPoints.y[i + 1]
-
-            curInGraph = this.pointInGraph(y)
-            nextInGraph = this.pointInGraph(ny)
-
-            command = this.getPathCommand(x, y, prevInGraph, curInGraph, nextInGraph)
-
-            path += command;
-
-            prevInGraph = curInGraph
-
+            // ny = scaledPoints.y[i + 1]
+            // curInGraph = this.pointInGraph(y)
+            // nextInGraph = this.pointInGraph(ny)
+            path += `L${x},${y}` //this.getPathCommand(x, y, prevInGraph, curInGraph, nextInGraph)
+            // prevInGraph = curInGraph
             i++;
         }
         return path
@@ -464,7 +360,7 @@ class Chart {
 
     // #region Zoom Rectangle Handling
     updateZoomRectangle() {
-        console.log(this.zoomRect.rectangle);
+        // console.log(this.zoomRect.rectangle);
         const x = Math.min(this.zoomRect.x1, this.zoomRect.x2);
         const y = Math.min(this.zoomRect.y1, this.zoomRect.y2);
         const width = Math.abs(this.zoomRect.x2 - this.zoomRect.x1)
@@ -488,8 +384,8 @@ class Chart {
 
     handleClick(e) {
         if (this.chart.contains(e.target)) {
-            console.log(e.offsetX)
-            console.log('in chart');
+            // console.log(e.offsetX)
+            // console.log('in chart');
             const loc = { x: e.offsetX, y: e.offsetY }
 
             this.zoomRect.active = true;
@@ -525,32 +421,28 @@ class Chart {
     }
 
     handleMouseUp(e) {
-        // if (!this.chart.contains(e.target)) return
 
         e.preventDefault()
 
+        if (!this.zoomRect.active) return
+
+        this.zoomRect.active = false;
+
         const width = Number(this.zoomRect.rectangle.getAttribute('width'))
         const height = Number(this.zoomRect.rectangle.getAttribute('height'))
-        console.log(width, height);
+
         this.zoomRect.rectangle.remove()
 
-        if (width === 0 || height === 0) {
-            this.zoomRect.active = false;
-            return;
-        }
+        if (width === 0 || height === 0) return;
 
+        const screenCoords = this.plotScreenCoordinates
+        const sortedCoords = this.sortCoords(this.zoomRect)
 
-        if (this.zoomRect.active) {
-            this.zoomRect.active = false;
-            
-            const screenCoords = this.plotScreenCoordinates
-            const sortedCoords = this.sortCoords(this.zoomRect)
+        const scaledZoom = this.scaleRectange(sortedCoords, screenCoords, this.plotRange)
 
-            const scaledZoom = this.scaleRectange(sortedCoords, screenCoords, this.plotRange)
+        this.plotRange = { ...scaledZoom }
+        this.updatePlot();
 
-            this.plotRange = { ...scaledZoom }
-            this.updatePlot();
-        }
     }
 
     handleDoubleClick(e) {
