@@ -1,5 +1,5 @@
 const SVGNS = 'http://www.w3.org/2000/svg'
-import { clamp } from "./utils.js"
+import { clamp, appendNewElement } from "./utils.js"
 
 const spanx = document.getElementById('x')
 const spany = document.getElementById('y')
@@ -47,7 +47,7 @@ class Chart {
 
     /**
      * Constructor
-     * @param {element} div 
+     * @param {element} div
      */
     constructor(div) {
 
@@ -88,7 +88,7 @@ class Chart {
      * Create clip rectangle for constraining plots
      */
     createClipPath() {
-        this.plotClip = this.appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
+        this.plotClip = appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
 
         this.clipRect = this.plotClip.appendChild(
             this.createRectangle(
@@ -103,14 +103,14 @@ class Chart {
      * Create plot group for path elements
      */
     createPlotGroup() {
-        this.plot = this.appendNewElement(this.chart, 'g', { id: 'plot' }, SVGNS)
+        this.plot = appendNewElement(this.chart, 'g', { id: 'plot' }, SVGNS)
     }
     /**
      * Create zoom group for the zoom rectangle
      */
     createZoomGroup() {
         this.zoomRect = {
-            group: this.appendNewElement(this.chart, 'g', { id: 'zoom-rect' }, SVGNS),
+            group: appendNewElement(this.chart, 'g', { id: 'zoom-rect' }, SVGNS),
             rectangle: undefined,
             active: false,
             x1: 0,
@@ -120,7 +120,7 @@ class Chart {
         }
 
         //temporary for debuging
-        this.appendNewElement(this.zoomRect.group, 'g', { id: 'temp' }, SVGNS)
+        appendNewElement(this.zoomRect.group, 'g', { id: 'temp' }, SVGNS)
     }
 
     /**
@@ -151,7 +151,7 @@ class Chart {
         this.plot.innerHTML = ''
         let i = 0;
         this.#data.forEach(e => {
-            this.appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(#plot-clip)', class: `plot${i++}` }, SVGNS)
+            appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(#plot-clip)', class: `plot${i++}` }, SVGNS)
         })
         console.log('drawing plot');
     }

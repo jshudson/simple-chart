@@ -168,4 +168,13 @@ function base64ArrayBuffer(arrayBuffer) {
     return base64
 }
 
-export { base64ArrayBuffer, clamp }
+function appendNewElement(parent, tagName, attributes, NS) {
+    const child = NS ? document.createElementNS(NS, tagName) : document.createElement(tagName)
+    Object.keys(attributes).forEach(key => {
+        child.setAttribute(key, attributes[key])
+    })
+    parent.appendChild(child);
+    return child;
+}
+
+export { base64ArrayBuffer, clamp, appendNewElement }
