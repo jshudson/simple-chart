@@ -5,6 +5,50 @@ const spanx = document.getElementById('x')
 const spany = document.getElementById('y')
 const objectOut = document.getElementById('object')
 class Chart {
+    /**
+     * History of plot limits of plot to display.  Last index is current.
+     * @prop {number} plotRange.x1 - starting x value
+     * @prop {number} plotRange.x2 - ending x value
+     * @prop {number} plotRange.y1 - starting y value
+     * @prop {number} plotRange.y2 - ending y value
+     */
+    #plotRange = [{ x1: 0, x2: 0, y1: 0, y2: 0 }];
+
+    /**
+     * Full scale for all data plots
+     * @prop {number} plotLimits.x1 - starting x value
+     * @prop {number} plotLimits.x2 - ending x value
+     * @prop {number} plotLimits.y1 - starting y value
+     * @prop {number} plotLimits.y2 - ending y value
+     */
+    #plotLimits = { x1: 0, x2: 0, y1: 0, y2: 0 };
+
+    /**
+     * Current size of plot on screen, corresponds to parent div size
+     * @prop {number} pad - inset from edge of element
+     * @prop {number} width - total width of plot, including pad
+     * @prop {number} height - total width of plot, including pad
+     */
+    #plotScreenDimensions = {}
+
+    /**
+     * Stroke width of plots
+     * @prop {number} strokeWidth
+     */
+    #strokeWidth = 3;
+
+    /**
+     * Array of all plot data objects
+     * @prop {Object[]} data - List of plot objects
+     * @prop {number[]} data[].x - List of x values
+     * @prop {number[]} data[].y - List of y values
+     */
+    #data = [];
+
+    /**
+     * Constructor
+     * @param {element} div 
+     */
     constructor(div) {
 
         this.element = div
@@ -12,7 +56,7 @@ class Chart {
         this.initializePlotVariables();
 
         this.createChart();
-        this.createClip();
+        this.createClipPath();
         this.createPlotGroup();
         this.createZoomGroup();
 
@@ -24,21 +68,11 @@ class Chart {
      * Set initial plot state
      */
     initializePlotVariables() {
-        this.plotRange = {
-            x1: 0,
-            x2: 0,
-            y1: 0,
-            y2: 0
-        }
-
-        this.plotScreenDimensions = {
+        this.#plotScreenDimensions = {
             pad: 10,
             width: this.element.offsetWidth,
             height: this.element.offsetHeight,
         }
-
-        this.data = [];
-        this.strokeWidth = 3;
     }
 
     /**
@@ -46,22 +80,22 @@ class Chart {
      */
     createChart() {
         this.chart = this.element.appendChild(document.createElementNS(SVGNS, 'svg'));
-        this.chart.setAttribute('width', this.plotScreenDimensions.width)
-        this.chart.setAttribute('height', this.plotScreenDimensions.height)
+        this.chart.setAttribute('width', this.#plotScreenDimensions.width)
+        this.chart.setAttribute('height', this.#plotScreenDimensions.height)
     }
 
     /**
      * Create clip rectangle for constraining plots
      */
-    createClip() {
+    createClipPath() {
         this.plotClip = this.appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
 
         this.clipRect = this.plotClip.appendChild(
             this.createRectangle(
-                this.plotScreenCoordinates.x1 - this.strokeWidth,
-                this.plotScreenCoordinates.y1 - this.strokeWidth,
-                this.plotScreenCoordinates.x2 - this.plotScreenDimensions.pad + this.strokeWidth,
-                this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth,
+                this.plotScreenCoordinates.x1 - this.#strokeWidth,
+                this.plotScreenCoordinates.y1 - this.#strokeWidth,
+                this.plotScreenCoordinates.x2 - this.#plotScreenDimensions.pad + this.#strokeWidth,
+                this.plotScreenCoordinates.y2 - this.#plotScreenDimensions.pad + this.#strokeWidth,
                 'clip-rect'))
     }
 
@@ -113,19 +147,17 @@ class Chart {
      */
     updatePlot() {
         if (!this.hasData) return;
-        this.updatePlotLimits();
+        // this.updatePlotLimits();
         this.plot.innerHTML = ''
         let i = 0;
-        this.data.forEach(e => {
+        this.#data.forEach(e => {
             this.appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(#plot-clip)', class: `plot${i++}` }, SVGNS)
         })
         console.log('drawing plot');
     }
     resetPlot() {
-        // console.log(this.plotRange);
         this.updatePlotLimits();
-        this.plotRange = { ...this.plotLimits }
-        // console.log(this.plotRange);
+        this.#plotRange = [{ ...this.#plotLimits }]
     }
     resize() {
         this.updatePlotScreenDimensions();
@@ -136,21 +168,21 @@ class Chart {
     }
 
     updatePlotScreenDimensions() {
-        this.plotScreenDimensions = {
-            ...this.plotScreenDimensions,
+        this.#plotScreenDimensions = {
+            ...this.#plotScreenDimensions,
             width: this.element.offsetWidth,
             height: this.element.offsetHeight,
         }
     }
 
     resizeChart() {
-        this.chart.setAttribute('width', this.plotScreenDimensions.width)
-        this.chart.setAttribute('height', this.plotScreenDimensions.height)
+        this.chart.setAttribute('width', this.#plotScreenDimensions.width)
+        this.chart.setAttribute('height', this.#plotScreenDimensions.height)
     }
 
     resizeClip() {
-        this.clipRect.setAttribute('width', Math.max(0, this.plotScreenCoordinates.x2 - this.plotScreenDimensions.pad + this.strokeWidth))
-        this.clipRect.setAttribute('height', Math.max(0, this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth))
+        this.clipRect.setAttribute('width', Math.max(0, this.plotScreenCoordinates.x2 - this.#plotScreenDimensions.pad + this.#strokeWidth))
+        this.clipRect.setAttribute('height', Math.max(0, this.plotScreenCoordinates.y2 - this.#plotScreenDimensions.pad + this.#strokeWidth))
     }
 
     //#endregion
@@ -185,7 +217,7 @@ class Chart {
      */
     addPlot(points, options) {
         this.hasData = true;
-        this.data = [...this.data, points];
+        this.#data = [...this.#data, points];
     }
 
     /**
@@ -205,15 +237,15 @@ class Chart {
     }
 
     updatePlotLimits() {
-        const plotLimits = this.data.reduce((acc, cur) => {
+        const plotLimits = this.#data.reduce((acc, cur) => {
             const curRange = this.getDataRange(cur)
             const x1 = Math.min(acc.x1, curRange.x1)
             const x2 = Math.max(acc.x2, curRange.x2)
             const y1 = Math.min(acc.y1, curRange.y1)
             const y2 = Math.max(acc.y2, curRange.y2)
             return { x1, x2, y1, y2 }
-        }, this.getDataRange(this.data[0]))
-        this.plotLimits = { ...plotLimits }
+        }, this.getDataRange(this.#data[0]))
+        this.#plotLimits = { ...plotLimits }
     }
 
     // #endregion
@@ -224,10 +256,10 @@ class Chart {
      */
     get plotScreenCoordinates() {
         return {
-            x1: this.plotScreenDimensions.pad,
-            x2: this.plotScreenDimensions.width - this.plotScreenDimensions.pad,
-            y1: this.plotScreenDimensions.pad,
-            y2: this.plotScreenDimensions.height - this.plotScreenDimensions.pad
+            x1: this.#plotScreenDimensions.pad,
+            x2: this.#plotScreenDimensions.width - this.#plotScreenDimensions.pad,
+            y1: this.#plotScreenDimensions.pad,
+            y2: this.#plotScreenDimensions.height - this.#plotScreenDimensions.pad
         }
     }
 
@@ -297,10 +329,10 @@ class Chart {
      * @returns {Object} Scaled Points
      */
     scalePointsToScreen(points) {
-        const screenCoords = this.plotScreenCoordinates
-
-        const scaleX = this.scaleArray(points.x, this.plotRange.x1, this.plotRange.x2, screenCoords.x1, screenCoords.x2);
-        const scaleY = this.scaleArray(points.y, this.plotRange.y1, this.plotRange.y2, screenCoords.y2, screenCoords.y1);
+        const { x1: sx1, x2: sx2, y1: sy1, y2: sy2 } = this.plotScreenCoordinates
+        const { x1: px1, x2: px2, y1: py1, y2: py2 } = this.#plotRange.at(-1);
+        const scaleX = this.scaleArray(points.x, px1, px2, sx1, sx2);
+        const scaleY = this.scaleArray(points.y, py1, py2, sy2, sy1);
 
         return { x: scaleX, y: scaleY }
     }
@@ -404,7 +436,7 @@ class Chart {
 
         e.preventDefault()
         if (this.zoomRect.active) {
-            const { pad, width, height } = this.plotScreenDimensions
+            const { pad, width, height } = this.#plotScreenDimensions
             this.zoomRect.x2 = clamp(relX, pad, width - pad) //Math.max(pad, Math.min(e.offsetX, width - pad))
             this.zoomRect.y2 = clamp(relY, pad, height - pad) //Math.max(pad, Math.min(e.offsetY, height - pad))
             this.updateZoomRectangle();
@@ -438,16 +470,23 @@ class Chart {
         const screenCoords = this.plotScreenCoordinates
         const sortedCoords = this.sortCoords(this.zoomRect)
 
-        const scaledZoom = this.scaleRectange(sortedCoords, screenCoords, this.plotRange)
+        const scaledZoom = this.scaleRectange(sortedCoords, screenCoords, this.#plotRange.at(-1))
 
-        this.plotRange = { ...scaledZoom }
+        this.#plotRange.push({ ...scaledZoom });
         this.updatePlot();
 
     }
 
     handleDoubleClick(e) {
+        console.log('double clicking');
         e.preventDefault();
-        this.plotRange = { ...this.plotLimits }
+
+        console.log(this.#plotRange);
+        if (this.#plotRange.length <= 1 || e.shiftKey) {
+            this.resetPlot();
+        } else {
+            this.#plotRange.pop();
+        }
         this.updatePlot();
     }
     // #endregion
