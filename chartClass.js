@@ -46,6 +46,12 @@ class Chart {
     #data = [];
 
     /**
+     * SVG Element for the chart
+     * @prop {Object} chart - SVG DOM element
+     */
+    #chart = undefined;
+
+    /**
      * Constructor
      * @param {element} div
      */
@@ -53,7 +59,7 @@ class Chart {
 
         this.element = div
 
-        this.initializePlotVariables();
+        this.initializePlotSize();
 
         this.createChart();
         this.createClipPath();
@@ -65,9 +71,9 @@ class Chart {
 
     // #region Constructor Helpers
     /**
-     * Set initial plot state
+     * Set initial plot size
      */
-    initializePlotVariables() {
+    initializePlotSize() {
         this.#plotScreenDimensions = {
             pad: 10,
             width: this.element.offsetWidth,
@@ -79,16 +85,16 @@ class Chart {
      * Create SVG element for drawing the chart
      */
     createChart() {
-        this.chart = this.element.appendChild(document.createElementNS(SVGNS, 'svg'));
-        this.chart.setAttribute('width', this.#plotScreenDimensions.width)
-        this.chart.setAttribute('height', this.#plotScreenDimensions.height)
+        this.#chart = this.element.appendChild(document.createElementNS(SVGNS, 'svg'));
+        this.#chart.setAttribute('width', this.#plotScreenDimensions.width)
+        this.#chart.setAttribute('height', this.#plotScreenDimensions.height)
     }
 
     /**
      * Create clip rectangle for constraining plots
      */
     createClipPath() {
-        this.plotClip = appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
+        this.plotClip = appendNewElement(this.#chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
 
         this.clipRect = this.plotClip.appendChild(
             this.createRectangle(
@@ -103,14 +109,14 @@ class Chart {
      * Create plot group for path elements
      */
     createPlotGroup() {
-        this.plot = appendNewElement(this.chart, 'g', { id: 'plot' }, SVGNS)
+        this.plot = appendNewElement(this.#chart, 'g', { id: 'plot' }, SVGNS)
     }
     /**
      * Create zoom group for the zoom rectangle
      */
     createZoomGroup() {
         this.zoomRect = {
-            group: appendNewElement(this.chart, 'g', { id: 'zoom-rect' }, SVGNS),
+            group: appendNewElement(this.#chart, 'g', { id: 'zoom-rect' }, SVGNS),
             rectangle: undefined,
             active: false,
             x1: 0,
@@ -135,7 +141,7 @@ class Chart {
         window.onmousedown = this.handleClick.bind(this);
         window.onmouseup = this.handleMouseUp.bind(this);
         window.onmousemove = this.handleMouseMove.bind(this);
-        this.chart.ondblclick = this.handleDoubleClick.bind(this);
+        this.#chart.ondblclick = this.handleDoubleClick.bind(this);
 
     }
     // #endregion
@@ -176,8 +182,8 @@ class Chart {
     }
 
     resizeChart() {
-        this.chart.setAttribute('width', this.#plotScreenDimensions.width)
-        this.chart.setAttribute('height', this.#plotScreenDimensions.height)
+        this.#chart.setAttribute('width', this.#plotScreenDimensions.width)
+        this.#chart.setAttribute('height', this.#plotScreenDimensions.height)
     }
 
     resizeClip() {
@@ -415,7 +421,7 @@ class Chart {
     }
 
     handleClick(e) {
-        if (this.chart.contains(e.target)) {
+        if (this.#chart.contains(e.target)) {
             // console.log(e.offsetX)
             // console.log('in chart');
             const loc = { x: e.offsetX, y: e.offsetY }
