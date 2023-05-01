@@ -1,68 +1,83 @@
-const SVGNS = 'http://www.w3.org/2000/svg'
-import { clamp, appendNewElement } from "./utils.js"
-import * as SVG from "./src/svgUtils.js";
+const SVGNS = 'http://www.w3.org/2000/svg';
+import { clamp, appendNewElement } from './utils.js';
+import * as SVG from './src/svgUtils.js';
 
-const spanx = document.getElementById('x')
-const spany = document.getElementById('y')
-const objectOut = document.getElementById('object')
+const defaultOptions = {
+    stroke: {
+        width: 3,
+        color: 'black',
+    },
+    fill: {
+        opacity: 0.5,
+        color: 'blue',
+    }
+}
+
+const defaultAxis = {
+    enable: true,
+    label: {
+        alignment: 'inline',
+        text: 'axis',
+    },
+    ticks: {
+        major: {
+            enable: true,
+            count: 10,
+            size: 5
+        },
+        minor: {
+            enable: true,
+            count: 10,
+            size: 2
+        }
+    }
+}
+
 class Chart {
-    /**
-     * History of plot limits of plot to display.  Last index is current.
-     * @prop {number} plotRange.x1 - starting x value
-     * @prop {number} plotRange.x2 - ending x value
-     * @prop {number} plotRange.y1 - starting y value
-     * @prop {number} plotRange.y2 - ending y value
-     */
-    #plotRange = [{ x1: 0, x2: 0, y1: 0, y2: 0 }];
-
-    /**
-     * Full scale for all data plots
-     * @prop {number} plotLimits.x1 - starting x value
-     * @prop {number} plotLimits.x2 - ending x value
-     * @prop {number} plotLimits.y1 - starting y value
-     * @prop {number} plotLimits.y2 - ending y value
-     */
-    #plotLimits = { x1: 0, x2: 0, y1: 0, y2: 0 };
-
-    /**
-     * Current size of plot on screen, corresponds to parent div size
-     * @prop {number} pad - inset from edge of element
-     * @prop {number} width - total width of plot, including pad
-     * @prop {number} height - total width of plot, including pad
-     */
-    #plotScreenDimensions = {}
-
-    /**
-     * Stroke width of plots
-     * @prop {number} strokeWidth
-     */
-    #strokeWidth = 3;
-
-    /**
-     * Array of all plot data objects
-     * @prop {Object[]} data - List of plot objects
-     * @prop {number[]} data[].x - List of x values
-     * @prop {number[]} data[].y - List of y values
-     */
-    #data = [];
-
-    /**
-     * SVG Element for the chart
-     * @prop {Object} chart - SVG DOM element
-     */
-    #chart = undefined;
 
     /**
      * Constructor
-     * @param {element} div
+     * @param {element} parent HTML element that will host the chart.
+     * @param {object} options list of options for the chart.
      */
-    constructor(div) {
+    constructor(parent, options) {
 
-        this.element = div
-
-        this.initializePlotSize();
-
-        this.createChart();
+        state = {
+            parent: parent,
+            viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
+            viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
+            width: parent.offsetWidth,
+            height: parent.offsetHeight,
+            pad: { left: 20, right: 10, top: 10, bottom: 20 },
+            plots: [{ data: [], options: { ...defaultOptions } }],
+            title: {
+                enable: true,
+                label: {
+                    alignment: 'top-left',
+                    text: 'Chromatogram'
+                }
+            },
+            axes: {
+                yaxis: { ...defaultAxis },
+                xaxis: { ...defaultAxis },
+            },
+            svgElements: {
+                chart: parent.appendChild(
+                    SVG.newSVGElement('svg',
+                        {
+                            width: parent.offsetWidth,
+                            height: parent.offsetHeight
+                        })),
+                clip: undefined,
+                interactive: undefined,
+                plots: {
+                    group: undefined,
+                    plot: [
+                        //array of SVG sub elements
+                    ]
+                }
+            }
+        }
         this.createClipPath();
         this.createPlotGroup();
         this.createZoomGroup();
@@ -71,16 +86,6 @@ class Chart {
     }
 
     // #region Constructor Helpers
-    /**
-     * Set initial plot size
-     */
-    initializePlotSize() {
-        this.#plotScreenDimensions = {
-            pad: 10,
-            width: this.element.offsetWidth,
-            height: this.element.offsetHeight,
-        }
-    }
 
     /**
      * Create SVG element for drawing the chart
