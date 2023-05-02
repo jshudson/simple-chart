@@ -1,6 +1,5 @@
 const SVGNS = 'http://www.w3.org/2000/svg'
-import { clamp, appendNewElement } from "./utils.js"
-import * as SVG from "./src/svgUtils.js";
+import { clamp, appendNewElement } from "./src/utils/utils.js"
 
 const spanx = document.getElementById('x')
 const spany = document.getElementById('y')

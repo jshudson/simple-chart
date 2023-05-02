@@ -41,19 +41,30 @@ export function pathXY(points, attributes) {
 
 /**
  * Get an SVG rect element.  Extra attributes (rx, ry, etc) can be added as an attribute object
- * @param {number} x 
- * @param {number} y 
- * @param {number} width 
- * @param {number} height 
- * @param {Object} attributes 
- * @returns 
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @param {Object} attributes
+ * @returns
  */
 
-export function rect(x,y, width,height,attributes) {
+export function rect(x, y, width, height, attributes) {
     const combinedAttributes = {
         ...attributes,
-        d: pathStringXY(points)
+        x,
+        y,
+        width,
+        height
     }
     const element = newSVGElement('rect', combinedAttributes, SVGNS)
     return element;
+}
+
+export function clipRect(x, y, width, height, attributes) {
+    const clip = newSVGElement('clipPath', attributes)
+    id = attribute?.id + 'clip-rect'
+    clip.appendChip(
+        rect(x, y, width, height,{id: attributes?id})
+    )
 }

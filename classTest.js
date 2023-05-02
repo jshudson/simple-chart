@@ -1,7 +1,7 @@
 import exported from './data.js'
 const { data, data2 } = exported
 import Chart from './chartClass.js'
-import { base64ArrayBuffer } from './utils.js'
+import { base64ArrayBuffer } from './src/utils/utils.js'
 
 const xyToObject = (data) => {
     return { x: data.map(x => x[0]), y: data.map(y => y[1]) }

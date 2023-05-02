@@ -1,6 +1,6 @@
 const SVGNS = 'http://www.w3.org/2000/svg';
-import { clamp, appendNewElement } from './utils.js';
-import * as SVG from './src/svgUtils.js';
+import { clamp, appendNewElement } from './src/utils/utils.js';
+import * as svg from './src/svgUtils.js';
 
 const defaultOptions = {
     stroke: {
@@ -49,7 +49,13 @@ class Chart {
             width: parent.offsetWidth,
             height: parent.offsetHeight,
             pad: { left: 20, right: 10, top: 10, bottom: 20 },
-            plots: [{ data: [], options: { ...defaultOptions } }],
+            plots: [
+                //     {
+                //     data: [],
+                //     options: { ...defaultOptions },
+                //     element: undefined
+                //     }
+            ],
             title: {
                 enable: true,
                 label: {
@@ -61,24 +67,26 @@ class Chart {
                 yaxis: { ...defaultAxis },
                 xaxis: { ...defaultAxis },
             },
-            svgElements: {
-                chart: parent.appendChild(
-                    SVG.newSVGElement('svg',
-                        {
-                            width: parent.offsetWidth,
-                            height: parent.offsetHeight
-                        })),
-                clip: undefined,
-                interactive: undefined,
-                plots: {
-                    group: undefined,
-                    plot: [
-                        //array of SVG sub elements
-                    ]
-                }
-            }
+            chart: parent.appendChild(
+                svg.newSVGElement('svg',
+                    {
+                        width: parent.offsetWidth,
+                        height: parent.offsetHeight
+                    }
+                )
+            ),
+            clip: undefined,
+            interactive: {
+                group: undefined,
+                rect: undefined,
+                cursor: undefined,
+                active: false,
+                coords: { x1: 0, x2: 0, y1: 0, y2: 0 }
+            },
         }
-        this.createClipPath();
+
+        this.state.clip = this.state.parent.appendChild(svg.clipPath)
+
         this.createPlotGroup();
         this.createZoomGroup();
 
@@ -86,15 +94,6 @@ class Chart {
     }
 
     // #region Constructor Helpers
-
-    /**
-     * Create SVG element for drawing the chart
-     */
-    createChart() {
-        this.#chart = this.element.appendChild(document.createElementNS(SVGNS, 'svg'));
-        this.#chart.setAttribute('width', this.#plotScreenDimensions.width)
-        this.#chart.setAttribute('height', this.#plotScreenDimensions.height)
-    }
 
     /**
      * Create clip rectangle for constraining plots
