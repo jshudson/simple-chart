@@ -14,18 +14,22 @@ const defaultOptions = {
 }
 
 const defaultAxis = {
+    e: undefined,
     enable: true,
     label: {
+        e: undefined,
         alignment: 'inline',
         text: 'axis',
     },
     ticks: {
         major: {
+            e: undefined,
             enable: true,
             count: 10,
             size: 5
         },
         minor: {
+            e: undefined,
             enable: true,
             count: 10,
             size: 2
@@ -42,13 +46,8 @@ class Chart {
      */
     constructor(parent, options) {
 
-        state = {
+        this.state = {
             parent: parent,
-            viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
-            viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
-            width: parent.offsetWidth,
-            height: parent.offsetHeight,
-            pad: { left: 20, right: 10, top: 10, bottom: 20 },
             plots: [
                 //     {
                 //     data: [],
@@ -56,44 +55,60 @@ class Chart {
                 //     element: undefined
                 //     }
             ],
-            title: {
-                enable: true,
-                label: {
-                    alignment: 'top-left',
-                    text: 'Chromatogram'
-                }
-            },
-            axes: {
-                yaxis: { ...defaultAxis },
-                xaxis: { ...defaultAxis },
-            },
-            chart: parent.appendChild(
-                svg.newSVGElement('svg',
-                    {
-                        width: parent.offsetWidth,
-                        height: parent.offsetHeight
+            chart: {
+                e: undefined,
+                viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
+                viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
+                width: parent.offsetWidth,
+                height: parent.offsetHeight,
+                title: {
+                    e: undefined,
+                    enable: true,
+                    label: {
+                        alignment: 'top-left',
+                        text: 'Chromatogram'
                     }
-                )
-            ),
-            clip: undefined,
+                },
+                plotArea: {
+                    e: undefined,
+                    width: 0,
+                    height: 0
+                },
+                axes: {
+                    e: undefined,
+                    yaxis: { ...defaultAxis },
+                    xaxis: { ...defaultAxis },
+                },
+                clip: {
+                    e: undefined,
+                    pad: { left: 20, right: 10, top: 10, bottom: 20 },
+                },
+            },
             interactive: {
-                group: undefined,
+                e: undefined,
                 rect: undefined,
                 cursor: undefined,
                 active: false,
-                coords: { x1: 0, x2: 0, y1: 0, y2: 0 }
+                box: { x1: 0, x2: 0, y1: 0, y2: 0 }
             },
         }
 
-        this.state.clip = this.state.parent.appendChild(svg.clipPath)
-
-        this.createPlotGroup();
-        this.createZoomGroup();
+        this.createChart()
 
         this.bindEvents();
     }
 
-    // #region Constructor Helpers
+    // #region Generate SVG Elements
+
+    createChart() {
+        this.state.chart = this.state.parent.appendChild(
+            svg.newSVGElement('svg', { id: 'test' })
+        )
+        this.state.chart.appendChild(
+            svg.newSVGElement()
+        )
+    }
+
 
     /**
      * Create clip rectangle for constraining plots
