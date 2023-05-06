@@ -21,9 +21,11 @@ parent
 */
 a = {
     parent: undefined,
+    viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
+    viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
     chart: {
-        id: '',
         e: undefined,
+        id: '',
         options: {
             title: true,
         },
@@ -49,16 +51,27 @@ a = {
                 label: {
                     e: undefined,
                     options: {
-                        position: 'inline'
+                        position: 'inline-right'
                     },
                     text: 'x-axis',
                 },
                 ticks: {
                     major: {
                         e: undefined,
-                        options: {},
+                        options: {
+                            divisions: 5,
+                            size: 3,
+                        },
                         labels: {
-                            e: undefined,
+                            e: [undefined],
+                            values: [0],
+                        }
+                    },
+                    minor: {
+                        e: undefined,
+                        options: {
+                            divisions: 5,
+                            size: 0.5,
                         }
                     }
                 }
