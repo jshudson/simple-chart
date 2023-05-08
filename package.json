@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "name": "svg-js-chart",
+  "version": "1.0.0",
+  "main": "chart.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jshudson/simple-chart.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jshudson/simple-chart/issues"
+  },
+  "homepage": "https://github.com/jshudson/simple-chart#readme",
+  "description": ""
+}
