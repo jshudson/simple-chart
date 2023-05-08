@@ -1,7 +1,7 @@
 const SVGNS = 'http://www.w3.org/2000/svg'
 
 export function newSVGElement(tagName, attributes) {
-    const element = NS ? document.createElementNS(SVGNS, tagName) : document.createElement(tagName)
+    const element = document.createElementNS(SVGNS, tagName)
     Object.keys(attributes).forEach(key => {
         element.setAttribute(key, attributes[key])
     })
@@ -65,6 +65,6 @@ export function clipRect(x, y, width, height, attributes) {
     const clip = newSVGElement('clipPath', attributes)
     id = attribute?.id + 'clip-rect'
     clip.appendChip(
-        rect(x, y, width, height,{id: attributes?id})
+        //rect(x, y, width, height,{id: attributes?id})
     )
 }

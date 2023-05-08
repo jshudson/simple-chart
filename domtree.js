@@ -1,4 +1,4 @@
-/* 
+/*
 parent
     chart (svg root)
         title
@@ -21,13 +21,16 @@ parent
 */
 a = {
     parent: undefined,
-    viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
-    viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
+    plots: [],
     chart: {
         e: undefined,
+        viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
+        viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
         id: '',
         options: {
             title: true,
+            border: true,
+            legend: false,
         },
         title: {
             e: undefined,
@@ -35,6 +38,12 @@ a = {
                 position: 'top-left'
             },
             text: 'Chromatogram'
+        },
+        border: {
+            e: undefined,
+        },
+        legend: {
+
         },
         axes: {
             e: undefined,
@@ -76,6 +85,25 @@ a = {
                     }
                 }
             }
+        },
+        plotArea: {
+            e: undefined,
+            width: 0,
+            height: 0,
+            pad: { left: 20, right: 10, top: 10, bottom: 20 },
+            clip: {
+                e: undefined,
+            },
+            paths: []
+        },
+        interactive: {
+            e: undefined,
+            rect: {
+                e: undefined,
+                box: { x1: 0, x2: 0, y1: 0, y2: 0 }
+            },
+            cursor: undefined,
+            active: false,
         }
     }
 }

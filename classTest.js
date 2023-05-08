@@ -1,6 +1,6 @@
 import exported from './data.js'
 const { data, data2 } = exported
-import Chart from './chartClass.js'
+import Chart from './src/chart/chartClassNew.js'
 import { base64ArrayBuffer } from './src/utils/utils.js'
 
 const xyToObject = (data) => {
@@ -9,19 +9,19 @@ const xyToObject = (data) => {
 
 const points = xyToObject(data2);
 
-console.log(data2.flatMap(x => x))
-const x = new Float64Array(data2.flatMap(num => num))
+// console.log(data2.flatMap(x => x))
+// const x = new Float64Array(data2.flatMap(num => num))
 
-console.log(base64ArrayBuffer(x.buffer))
-
-
+// console.log(base64ArrayBuffer(x.buffer))
 
 
 
-const points2 = xyToObject(data);
+
+
+// const points2 = xyToObject(data);
 const MyChart = new Chart(document.getElementById("graph"))
 
-MyChart.addPlot(points);
-MyChart.addPlot(points2);
-MyChart.resetPlot();
-MyChart.updatePlot()
+// MyChart.addPlot(points);
+// MyChart.addPlot(points2);
+// MyChart.resetPlot();
+// MyChart.updatePlot()

@@ -1,7 +1,11 @@
-const state = {
-  a: 1,
+let state = {
+  a: { a: 1, b: 2 }
 }
-
-const d = state?.c ? state.c : '' + "hello"
-
-console.log(d)
+let newState = {
+  a: { c: 3 }
+}
+state = {
+  ...newState,
+  ...state,
+}
+console.log(state)

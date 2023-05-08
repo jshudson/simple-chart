@@ -1,41 +1,7 @@
 const SVGNS = 'http://www.w3.org/2000/svg';
-import { clamp, appendNewElement } from './src/utils/utils.js';
-import * as svg from './src/svgUtils.js';
-
-const defaultOptions = {
-    stroke: {
-        width: 3,
-        color: 'black',
-    },
-    fill: {
-        opacity: 0.5,
-        color: 'blue',
-    }
-}
-
-const defaultAxis = {
-    e: undefined,
-    enable: true,
-    label: {
-        e: undefined,
-        alignment: 'inline',
-        text: 'axis',
-    },
-    ticks: {
-        major: {
-            e: undefined,
-            enable: true,
-            count: 10,
-            size: 5
-        },
-        minor: {
-            e: undefined,
-            enable: true,
-            count: 10,
-            size: 2
-        }
-    }
-}
+import { clamp, appendNewElement } from '../utils/utils.js';
+import * as svg from '../svgUtils/svgUtils.js';
+import defaultState from './defaultState.js';
 
 class Chart {
 
@@ -46,67 +12,113 @@ class Chart {
      */
     constructor(parent, options) {
 
+        this.setState(defaultState);
+        this.setState({ parent, id: 'testing' })
+
+        this.copyParentDimensions();
+        this.buildChart();
+        console.log(this.state);
+    }
+    setState(newState) {
+        console.log('current state', this.state);
+        console.log(newState);
         this.state = {
-            parent: parent,
-            plots: [
-                //     {
-                //     data: [],
-                //     options: { ...defaultOptions },
-                //     element: undefined
-                //     }
-            ],
-            chart: {
-                e: undefined,
-                viewBox: [{ x1: 0, x2: 0, y1: 0, y2: 0 }],
-                viewLimits: { x1: 0, x2: 0, y1: 0, y2: 0 },
-                width: parent.offsetWidth,
-                height: parent.offsetHeight,
-                title: {
-                    e: undefined,
-                    enable: true,
-                    label: {
-                        alignment: 'top-left',
-                        text: 'Chromatogram'
-                    }
-                },
-                plotArea: {
-                    e: undefined,
-                    width: 0,
-                    height: 0
-                },
-                axes: {
-                    e: undefined,
-                    yaxis: { ...defaultAxis },
-                    xaxis: { ...defaultAxis },
-                },
-                clip: {
-                    e: undefined,
-                    pad: { left: 20, right: 10, top: 10, bottom: 20 },
-                },
-            },
-            interactive: {
-                e: undefined,
-                rect: undefined,
-                cursor: undefined,
-                active: false,
-                box: { x1: 0, x2: 0, y1: 0, y2: 0 }
-            },
+            ...this.state,
+            ...newState
         }
-
-        this.createChart()
-
-        this.bindEvents();
+    }
+    copyParentDimensions() {
+        const parent = this.state.parent;
+        this.setState({
+            chart: {
+                width: parent.offsetWidth - 10, height: parent.offsetHeight - 10
+            }
+        })
     }
 
     // #region Generate SVG Elements
+    buildChart() {
+        this.addChartRoot();
+        this.addTitle();
+        // this.addBorder();
+        // this.addLegend();
+        this.addAxes();
+        // this.addPlotArea();
+        // this.addInterative();
+    }
 
-    createChart() {
-        this.state.chart = this.state.parent.appendChild(
-            svg.newSVGElement('svg', { id: 'test' })
+    addChartRoot() {
+        const chart = this.state.chart;
+        const element = this.state.parent.appendChild(
+            svg.newSVGElement('svg', {
+                id: this.state.id + '-chart',
+                width: chart.width,
+                height: chart.height
+            })
         )
-        this.state.chart.appendChild(
-            svg.newSVGElement()
+        this.setState({
+            chart: {
+                e: element
+            }
+        })
+    }
+
+    addTitle() {
+        const chartElement = this.state.chart.e;
+        const element = chartElement.appendChild(
+            svg.newSVGElement('text', {
+                id: this.state.id + '-title',
+                y: 35
+            })
         )
+
+        element.innerHTML = "test"
+
+        this.setState({
+            chart: {
+                title: {
+                    e: element
+                }
+            }
+        })
+    }
+
+    addAxes() {
+        const chartElement = this.state.chart.e;
+        console.log(this.state.chart.e)
+        const element = chartElement.appendChild(
+            svg.newSVGElement('g', {
+                id: `${this.state.id}-axes`
+            })
+        )
+
+        this.setState({
+            chart: {
+                axes: {
+                    e: element
+                }
+            }
+        })
+
+        this.addAxis('x');
+        this.addAxis('y');
+    }
+
+    addAxis(direction) {
+        const chartElement = this.state.chart.e;
+        const element = chartElement.appendChild(
+            svg.newSVGElement('g', {
+                id: `${this.state.id}-${direction}-axis`
+            })
+        )
+        this.setState({
+            chart: {
+                axes: {
+                    [`${direction}Axis`]: element
+                }
+            }
+        })
+
     }
 
 
@@ -114,14 +126,14 @@ class Chart {
      * Create clip rectangle for constraining plots
      */
     createClipPath() {
-        this.plotClip = appendNewElement(this.#chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
+        this.plotClip = appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
 
         this.clipRect = this.plotClip.appendChild(
             this.createRectangle(
-                this.plotScreenCoordinates.x1 - this.#strokeWidth,
-                this.plotScreenCoordinates.y1 - this.#strokeWidth,
-                this.plotScreenCoordinates.x2 - this.#plotScreenDimensions.pad + this.#strokeWidth,
-                this.plotScreenCoordinates.y2 - this.#plotScreenDimensions.pad + this.#strokeWidth,
+                this.plotScreenCoordinates.x1 - this.strokeWidth,
+                this.plotScreenCoordinates.y1 - this.strokeWidth,
+                this.plotScreenCoordinates.x2 - this.plotScreenDimensions.pad + this.strokeWidth,
+                this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth,
                 'clip-rect'))
     }
 
@@ -129,14 +141,14 @@ class Chart {
      * Create plot group for path elements
      */
     createPlotGroup() {
-        this.plot = appendNewElement(this.#chart, 'g', { id: 'plot' }, SVGNS)
+        this.plot = appendNewElement(this.chart, 'g', { id: 'plot' }, SVGNS)
     }
     /**
      * Create zoom group for the zoom rectangle
      */
     createZoomGroup() {
         this.zoomRect = {
-            group: appendNewElement(this.#chart, 'g', { id: 'zoom-rect' }, SVGNS),
+            group: appendNewElement(this.chart, 'g', { id: 'zoom-rect' }, SVGNS),
             rectangle: undefined,
             active: false,
             x1: 0,
@@ -161,7 +173,7 @@ class Chart {
         window.onmousedown = this.handleClick.bind(this);
         window.onmouseup = this.handleMouseUp.bind(this);
         window.onmousemove = this.handleMouseMove.bind(this);
-        this.#chart.ondblclick = this.handleDoubleClick.bind(this);
+        this.chart.ondblclick = this.handleDoubleClick.bind(this);
 
     }
     // #endregion
@@ -176,14 +188,14 @@ class Chart {
         // this.updatePlotLimits();
         this.plot.innerHTML = ''
         let i = 0;
-        this.#data.forEach(e => {
-            appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(#plot-clip)', class: `plot${i++}` }, SVGNS)
+        this.data.forEach(e => {
+            appendNewElement(this.plot, 'path', { d: this.pointsToSVGPath(e), 'clip-path': 'url(plot-clip)', class: `plot${i++}` }, SVGNS)
         })
         console.log('drawing plot');
     }
     resetPlot() {
         this.updatePlotLimits();
-        this.#plotRange = [{ ...this.#plotLimits }]
+        this.plotRange = [{ ...this.plotLimits }]
     }
     resize() {
         this.updatePlotScreenDimensions();
@@ -194,21 +206,21 @@ class Chart {
     }
 
     updatePlotScreenDimensions() {
-        this.#plotScreenDimensions = {
-            ...this.#plotScreenDimensions,
+        this.plotScreenDimensions = {
+            ...this.plotScreenDimensions,
             width: this.element.offsetWidth,
             height: this.element.offsetHeight,
         }
     }
 
     resizeChart() {
-        this.#chart.setAttribute('width', this.#plotScreenDimensions.width)
-        this.#chart.setAttribute('height', this.#plotScreenDimensions.height)
+        this.chart.setAttribute('width', this.plotScreenDimensions.width)
+        this.chart.setAttribute('height', this.plotScreenDimensions.height)
     }
 
     resizeClip() {
-        this.clipRect.setAttribute('width', Math.max(0, this.plotScreenCoordinates.x2 - this.#plotScreenDimensions.pad + this.#strokeWidth))
-        this.clipRect.setAttribute('height', Math.max(0, this.plotScreenCoordinates.y2 - this.#plotScreenDimensions.pad + this.#strokeWidth))
+        this.clipRect.setAttribute('width', Math.max(0, this.plotScreenCoordinates.x2 - this.plotScreenDimensions.pad + this.strokeWidth))
+        this.clipRect.setAttribute('height', Math.max(0, this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth))
     }
 
     //#endregion
@@ -243,7 +255,7 @@ class Chart {
      */
     addPlot(points, options) {
         this.hasData = true;
-        this.#data = [...this.#data, points];
+        this.data = [...this.data, points];
     }
 
     /**
@@ -263,29 +275,29 @@ class Chart {
     }
 
     updatePlotLimits() {
-        const plotLimits = this.#data.reduce((acc, cur) => {
+        const plotLimits = this.data.reduce((acc, cur) => {
             const curRange = this.getDataRange(cur)
             const x1 = Math.min(acc.x1, curRange.x1)
             const x2 = Math.max(acc.x2, curRange.x2)
             const y1 = Math.min(acc.y1, curRange.y1)
             const y2 = Math.max(acc.y2, curRange.y2)
             return { x1, x2, y1, y2 }
-        }, this.getDataRange(this.#data[0]))
-        this.#plotLimits = { ...plotLimits }
+        }, this.getDataRange(this.data[0]))
+        this.plotLimits = { ...plotLimits }
     }
 
     // #endregion
 
     // #region Plot Data Scaling
     /**
-     * Get screen coordinates for plot region
+     * Get screen coordinates for plot #region
      */
     get plotScreenCoordinates() {
         return {
-            x1: this.#plotScreenDimensions.pad,
-            x2: this.#plotScreenDimensions.width - this.#plotScreenDimensions.pad,
-            y1: this.#plotScreenDimensions.pad,
-            y2: this.#plotScreenDimensions.height - this.#plotScreenDimensions.pad
+            x1: this.plotScreenDimensions.pad,
+            x2: this.plotScreenDimensions.width - this.plotScreenDimensions.pad,
+            y1: this.plotScreenDimensions.pad,
+            y2: this.plotScreenDimensions.height - this.plotScreenDimensions.pad
         }
     }
 
@@ -356,7 +368,7 @@ class Chart {
      */
     scalePointsToScreen(points) {
         const { x1: sx1, x2: sx2, y1: sy1, y2: sy2 } = this.plotScreenCoordinates
-        const { x1: px1, x2: px2, y1: py1, y2: py2 } = this.#plotRange.at(-1);
+        const { x1: px1, x2: px2, y1: py1, y2: py2 } = this.plotRange.at(-1);
         const scaleX = this.scaleArray(points.x, px1, px2, sx1, sx2);
         const scaleY = this.scaleArray(points.y, py1, py2, sy2, sy1);
 
@@ -411,7 +423,7 @@ class Chart {
         return `
         <path
             d = ${this.pointsToSVGPath(points)}
-            clip-path="url(#plot-clip)"
+            clip-path="url(plot-clip)"
         />`
     }
     //#endregion
@@ -441,7 +453,7 @@ class Chart {
     }
 
     handleClick(e) {
-        if (this.#chart.contains(e.target)) {
+        if (this.chart.contains(e.target)) {
             // console.log(e.offsetX)
             // console.log('in chart');
             const loc = { x: e.offsetX, y: e.offsetY }
@@ -462,7 +474,7 @@ class Chart {
 
         e.preventDefault()
         if (this.zoomRect.active) {
-            const { pad, width, height } = this.#plotScreenDimensions
+            const { pad, width, height } = this.plotScreenDimensions
             this.zoomRect.x2 = clamp(relX, pad, width - pad) //Math.max(pad, Math.min(e.offsetX, width - pad))
             this.zoomRect.y2 = clamp(relY, pad, height - pad) //Math.max(pad, Math.min(e.offsetY, height - pad))
             this.updateZoomRectangle();
@@ -496,9 +508,9 @@ class Chart {
         const screenCoords = this.plotScreenCoordinates
         const sortedCoords = this.sortCoords(this.zoomRect)
 
-        const scaledZoom = this.scaleRectange(sortedCoords, screenCoords, this.#plotRange.at(-1))
+        const scaledZoom = this.scaleRectange(sortedCoords, screenCoords, this.plotRange.at(-1))
 
-        this.#plotRange.push({ ...scaledZoom });
+        this.plotRange.push({ ...scaledZoom });
         this.updatePlot();
 
     }
@@ -507,11 +519,11 @@ class Chart {
         console.log('double clicking');
         e.preventDefault();
 
-        console.log(this.#plotRange);
-        if (this.#plotRange.length <= 1 || e.shiftKey) {
+        console.log(this.plotRange);
+        if (this.plotRange.length <= 1 || e.shiftKey) {
             this.resetPlot();
         } else {
-            this.#plotRange.pop();
+            this.plotRange.pop();
         }
         this.updatePlot();
     }
