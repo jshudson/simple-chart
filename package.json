@@ -1,11 +1,7 @@
 {
-  "dependencies": {
-    "lodash": "^4.17.21"
-  },
   "name": "svg-js-chart",
   "version": "1.0.0",
   "main": "chart.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,5 +15,8 @@
     "url": "https://github.com/jshudson/simple-chart/issues"
   },
   "homepage": "https://github.com/jshudson/simple-chart#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "lodash-es": "^4.17.21"
+  }
 }

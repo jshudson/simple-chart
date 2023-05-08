@@ -2,7 +2,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 import { clamp, appendNewElement } from '../utils/utils.js';
 import * as svg from '../svgUtils/svgUtils.js';
 import defaultState from './defaultState.js';
-import _ from 'lodash'
+import _ from '../../node_modules/lodash-es/lodash.js'
 
 console.log(_.clamp(10,0,5))
 class Chart {
