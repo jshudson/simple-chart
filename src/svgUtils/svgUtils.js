@@ -8,6 +8,13 @@ export function newSVGElement(tagName, attributes) {
     return element;
 }
 
+export function append(parent, type, id, attributes) {
+    return parent.appendChild(
+        newSVGElement(type, { id, ...attributes })
+    )
+}
+
+
 /**
  * Get a path string for an x y list object
  * @param {number[]} points.x

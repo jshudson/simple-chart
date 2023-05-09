@@ -1,7 +1,17 @@
+import * as svg from '../svgUtils/svgUtils.js'
+
 export default {
   parent: undefined,
   plots: [],
   chart: {
+    create: function () {
+      console.log(this);
+      this.chart.e = svg.append(
+        this.parent,
+        'svg',
+        `${'test'}-chart`
+      )
+    },
     e: undefined,
     width: 0,
     height: 0,
@@ -36,6 +46,46 @@ export default {
           major: true,
           minor: true,
           label: true,
+          numberFormat: '0.0'
+        },
+        label: {
+          e: undefined,
+          options: {
+            position: 'inline-right'
+          },
+          text: 'x-axis',
+        },
+        line: {
+          e: undefined,
+        },
+        ticks: {
+          major: {
+            e: undefined,
+            options: {
+              divisions: 5,
+              size: 3,
+            },
+            labels: {
+              e: [undefined],
+              values: [0],
+            }
+          },
+          minor: {
+            e: undefined,
+            options: {
+              divisions: 5,
+              size: 0.5,
+            }
+          }
+        }
+      },
+      yAxis: {
+        e: undefined,
+        options: {
+          position: 'bottom',
+          major: true,
+          minor: true,
+          label: true,
           numberFormat: '0.0e0'
         },
         label: {
@@ -44,6 +94,9 @@ export default {
             position: 'inline-right'
           },
           text: 'x-axis',
+        },
+        line: {
+          e: undefined,
         },
         ticks: {
           major: {

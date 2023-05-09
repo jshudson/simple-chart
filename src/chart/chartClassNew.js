@@ -2,9 +2,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 import { clamp, appendNewElement } from '../utils/utils.js';
 import * as svg from '../svgUtils/svgUtils.js';
 import defaultState from './defaultState.js';
-import _ from '../../node_modules/lodash-es/lodash.js'
+import merge from '../../node_modules/lodash-es/merge.js'
 
-console.log(_.clamp(10,0,5))
 class Chart {
 
     /**
@@ -16,17 +15,15 @@ class Chart {
 
         this.setState(defaultState);
         this.setState({ parent, id: 'testing' })
-
         this.copyParentDimensions();
         this.buildChart();
-        console.log(this.state);
+        this.bindEvents();
+
     }
     setState(newState) {
-        console.log('current state', this.state);
-        console.log(newState);
+        const mergedState = merge({ ...this.state }, newState)
         this.state = {
-            ...this.state,
-            ...newState
+            ...mergedState,
         }
     }
     copyParentDimensions() {
@@ -40,7 +37,8 @@ class Chart {
 
     // #region Generate SVG Elements
     buildChart() {
-        this.addChartRoot();
+        this.state.chart.create()
+        // this.addChartRoot();
         this.addTitle();
         // this.addBorder();
         // this.addLegend();
@@ -50,54 +48,41 @@ class Chart {
     }
 
     addChartRoot() {
-        const chart = this.state.chart;
-        const element = this.state.parent.appendChild(
-            svg.newSVGElement('svg', {
-                id: this.state.id + '-chart',
-                width: chart.width,
-                height: chart.height
-            })
-        )
         this.setState({
             chart: {
-                e: element
+                e: svg.append(
+                    this.state.parent,
+                    'svg',
+                    `${this.state.id}-chart`
+                )
             }
         })
     }
 
     addTitle() {
-        const chartElement = this.state.chart.e;
-        const element = chartElement.appendChild(
-            svg.newSVGElement('text', {
-                id: this.state.id + '-title',
-                y: 35
-            })
-        )
-
-        element.innerHTML = "test"
-
         this.setState({
             chart: {
                 title: {
-                    e: element
+                    e: svg.append(
+                        this.state.chart.e,
+                        'text',
+                        `${this.state.id}-title`,
+                        { y: 35 }
+                    )
                 }
             }
         })
     }
 
     addAxes() {
-        const chartElement = this.state.chart.e;
-        console.log(this.state.chart.e)
-        const element = chartElement.appendChild(
-            svg.newSVGElement('g', {
-                id: `${this.state.id}-axes`
-            })
-        )
-
         this.setState({
             chart: {
                 axes: {
-                    e: element
+                    e: svg.append(
+                        this.state.chart.e,
+                        'g',
+                        `${this.state.id}-axes`
+                    )
                 }
             }
         })
@@ -107,8 +92,8 @@ class Chart {
     }
 
     addAxis(direction) {
-        const chartElement = this.state.chart.e;
-        const element = chartElement.appendChild(
+        const axes = this.state.chart.axes.e;
+        const element = axes.appendChild(
             svg.newSVGElement('g', {
                 id: `${this.state.id}-${direction}-axis`
             })
@@ -116,66 +101,50 @@ class Chart {
         this.setState({
             chart: {
                 axes: {
-                    [`${direction}Axis`]: element
+                    [`${direction}Axis`]: { e: element }
                 }
             }
         })
-
+        this.addAxisLabel(direction)
     }
 
-
-    /**
-     * Create clip rectangle for constraining plots
-     */
-    createClipPath() {
-        this.plotClip = appendNewElement(this.chart, 'clipPath', { id: 'plot-clip' }, SVGNS)
-
-        this.clipRect = this.plotClip.appendChild(
-            this.createRectangle(
-                this.plotScreenCoordinates.x1 - this.strokeWidth,
-                this.plotScreenCoordinates.y1 - this.strokeWidth,
-                this.plotScreenCoordinates.x2 - this.plotScreenDimensions.pad + this.strokeWidth,
-                this.plotScreenCoordinates.y2 - this.plotScreenDimensions.pad + this.strokeWidth,
-                'clip-rect'))
+    addAxisLabel(direction) {
+        const axis = this.state.chart.axes[`${direction}Axis`].e
+        const element = axis.appendChild(
+            svg.newSVGElement('text', {
+                id: `${this.state.id}-${direction}-axis-label`
+            })
+        )
+        this.setState({
+            chart: {
+                axes: {
+                    [`${direction}Axis`]: { label: { e: element } }
+                }
+            }
+        })
     }
 
-    /**
-     * Create plot group for path elements
-     */
-    createPlotGroup() {
-        this.plot = appendNewElement(this.chart, 'g', { id: 'plot' }, SVGNS)
-    }
-    /**
-     * Create zoom group for the zoom rectangle
-     */
-    createZoomGroup() {
-        this.zoomRect = {
-            group: appendNewElement(this.chart, 'g', { id: 'zoom-rect' }, SVGNS),
-            rectangle: undefined,
-            active: false,
-            x1: 0,
-            x2: 0,
-            y1: 0,
-            y2: 0
-        }
-
-        //temporary for debuging
-        appendNewElement(this.zoomRect.group, 'g', { id: 'temp' }, SVGNS)
+    addAxisLine(direction) {
+        const axis = this.state.chart.axes[`${direction}Axis`].e
+        const element = axis.appendChild(
+            svg.newS
+        )
     }
 
+    // #end region
     /**
      * Bind event handlers
      */
     bindEvents() {
         //resizing
         this.initializeResizeObserver();
-        this.resizeObserver.observe(this.element);
+        this.resizeObserver.observe(this.state.parent);
 
         //mouse handlers
-        window.onmousedown = this.handleClick.bind(this);
-        window.onmouseup = this.handleMouseUp.bind(this);
-        window.onmousemove = this.handleMouseMove.bind(this);
-        this.chart.ondblclick = this.handleDoubleClick.bind(this);
+        // window.onmousedown = this.handleClick.bind(this);
+        // window.onmouseup = this.handleMouseUp.bind(this);
+        // window.onmousemove = this.handleMouseMove.bind(this);
+        // this.chart.ondblclick = this.handleDoubleClick.bind(this);
 
     }
     // #endregion
@@ -200,24 +169,17 @@ class Chart {
         this.plotRange = [{ ...this.plotLimits }]
     }
     resize() {
-        this.updatePlotScreenDimensions();
+        this.copyParentDimensions();
         this.resizeChart();
-        this.resizeClip();
-        if (this.hasData) this.updatePlot();
-        return true
-    }
-
-    updatePlotScreenDimensions() {
-        this.plotScreenDimensions = {
-            ...this.plotScreenDimensions,
-            width: this.element.offsetWidth,
-            height: this.element.offsetHeight,
-        }
+        // this.resizeClip();
+        // if (this.hasData) this.updatePlot();
+        // return true
     }
 
     resizeChart() {
-        this.chart.setAttribute('width', this.plotScreenDimensions.width)
-        this.chart.setAttribute('height', this.plotScreenDimensions.height)
+        const chart = this.state.chart
+        chart.e.setAttribute('width', chart.width)
+        chart.e.setAttribute('height', chart.height)
     }
 
     resizeClip() {
