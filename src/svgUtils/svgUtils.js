@@ -21,9 +21,9 @@ export function append(parent, type, id, attributes) {
  * @param {number[]} points.y
  * @returns {string} SVG Path String
  */
-function pathStringXY(points) {
+export function pathStringXY(points) {
     let path = `M${points.x[0]},${points.y[0]}`;
-    for (let i = 0; i < path.length; i++) {
+    for (let i = 0; i < points.x.length; i++) {
         path += `L${points.x[i]},${points.y[i]}`;
     }
     return path
