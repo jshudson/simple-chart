@@ -1,6 +1,6 @@
 const SVGNS = 'http://www.w3.org/2000/svg'
 
-export function newSVGElement(tagName, attributes) {
+export function newElement(tagName, attributes) {
     const element = document.createElementNS(SVGNS, tagName)
     Object.keys(attributes).forEach(key => {
         element.setAttribute(key, attributes[key])
@@ -8,9 +8,9 @@ export function newSVGElement(tagName, attributes) {
     return element;
 }
 
-export function append(parent, type, id, attributes) {
+export function append(parent, type, attributes) {
     return parent.appendChild(
-        newSVGElement(type, { id, ...attributes })
+        newElement(type, { ...attributes })
     )
 }
 
@@ -42,7 +42,7 @@ export function pathXY(points, attributes) {
         ...attributes,
         d: pathStringXY(points)
     }
-    const element = newSVGElement('path', combinedAttributes, SVGNS)
+    const element = newElement('path', combinedAttributes, SVGNS)
     return element;
 }
 
@@ -64,14 +64,16 @@ export function rect(x, y, width, height, attributes) {
         width,
         height
     }
-    const element = newSVGElement('rect', combinedAttributes, SVGNS)
+    const element = newElement('rect', combinedAttributes, SVGNS)
     return element;
 }
 
 export function clipRect(x, y, width, height, attributes) {
-    const clip = newSVGElement('clipPath', attributes)
-    id = attribute?.id + 'clip-rect'
-    clip.appendChip(
-        //rect(x, y, width, height,{id: attributes?id})
+
+    const clip = newElement('clipPath', attributes)
+
+    clip.appendChild(
+        rect(x, y, width, height)
     )
+    return clip
 }

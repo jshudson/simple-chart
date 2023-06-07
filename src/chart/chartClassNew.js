@@ -94,7 +94,7 @@ class Chart {
     addAxis(direction) {
         const axes = this.state.chart.axes.e;
         const element = axes.appendChild(
-            svg.newSVGElement('g', {
+            svg.newElement('g', {
                 id: `${this.state.id}-${direction}-axis`
             })
         )
@@ -111,7 +111,7 @@ class Chart {
     addAxisLabel(direction) {
         const axis = this.state.chart.axes[`${direction}Axis`].e
         const element = axis.appendChild(
-            svg.newSVGElement('text', {
+            svg.newElement('text', {
                 id: `${this.state.id}-${direction}-axis-label`
             })
         )

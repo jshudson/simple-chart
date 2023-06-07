@@ -9,9 +9,9 @@ const xyToObject = (data) => {
     return { x: data.map(x => x[0]), y: data.map(y => y[1]) }
 }
 
-const points = xyToObject(data2);
+const points = xyToObject(data);
 
-const plot = new Plot(document.getElementById('graph'),points)
+const plot = new Plot(document.getElementById('graph'),points,{})
 
 // console.log(data2.flatMap(x => x))
 // const x = new Float64Array(data2.flatMap(num => num))
