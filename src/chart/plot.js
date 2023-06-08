@@ -2,14 +2,14 @@ import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 
 class Plot {
-  constructor(parent, points, options) {
-    this.plotId = "pltID"
+  constructor(parent, points, id, options) {
+    this.plotId = id
 
     //remove later
-    options.width = this.width = 300;
-    options.height = this.height = 200;
-    options.left = 30;
-    options.top = 15;
+    this.width = options.width
+    this.height = options.height
+    this.left = options.left;
+    this.top = options.top;
 
     this.points = { ...points }
 

@@ -11,7 +11,7 @@ const xyToObject = (data) => {
 
 const points = xyToObject(data);
 
-const plot = new Plot(document.getElementById('graph'),points,{})
+const plot = new Plot(document.getElementById('graph'),points,'plt', {width:500,height:350,top:10,left:10})
 
 // console.log(data2.flatMap(x => x))
 // const x = new Float64Array(data2.flatMap(num => num))
