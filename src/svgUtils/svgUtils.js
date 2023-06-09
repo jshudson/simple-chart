@@ -14,7 +14,6 @@ export function append(parent, type, attributes) {
     )
 }
 
-
 /**
  * Get a path string for an x y list object
  * @param {number[]} points.x

@@ -3,7 +3,7 @@ import * as xform from './coordinateTransfer.js';
 
 class Plot {
   constructor(parent, points, id, options) {
-    this.plotId = id
+    this.id = id
 
     //remove later
     this.width = options.width
@@ -20,35 +20,28 @@ class Plot {
     this.group = this.parent.appendChild(
       svg.newElement('g',
         {
-          id: this.plotId,
+          id: this.id,
           transform: `translate(${options.left},${options.top})`,
-          "clip-path": `url(#${this.plotId}-clip-path)`
+          "clip-path": `url(#${this.id}-clip-path)`
         }
       )
     )
 
     this.clip = this.group.appendChild(
       svg.clipRect(0, 0, options.width, options.height,
-        { id: this.plotId + '-clip-path' })
+        { id: this.id + '-clip-path' })
     )
 
     this.path = this.group.appendChild(
       svg.newElement('path',
         {
-          id: this.plotId + '-plot',
+          id: this.id + '-plot',
           class: 'plot',
         })
     )
 
     if (options?.limits) {
-      this.setLimits(options.setLimits)
-    } else {
-      this.setLimits(
-        {
-          x: [this.points.x[0], this.points.x[this.points.x.length - 1]],
-          y: [Math.max(...this.points.y), Math.min(...this.points.y)]
-        }
-      )
+      this.setLimits(options.limits)
     }
   }
 
@@ -59,7 +52,7 @@ class Plot {
   getPathString() {
     const scaledPoints = xform.transformXYObj(this.points,
       this.limits,
-      { x: [0, this.width], y: [0, this.height] }
+      { x: [0, this.width], y: [this.height, 0] }
     )
     return svg.pathStringXY(scaledPoints)
   }
