@@ -1,4 +1,4 @@
-export const findInterval = (value) => {
+const findInterval = (value) => {
   const exponent = Math.floor(Math.log10(value));
   const mantissa = value / (10 ** exponent)
   const orders = [1, 2, 2.5, 5];
@@ -15,7 +15,7 @@ export const findInterval = (value) => {
 }
 
 
-export const findFirstTick = (start, interval) => {
+const findFirstTick = (start, interval) => {
   return Math.ceil(interval / start) * interval
 }
 

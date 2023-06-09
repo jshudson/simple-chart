@@ -54,7 +54,22 @@ class Plot {
       this.limits,
       { x: [0, this.width], y: [this.height, 0] }
     )
-    return svg.pathStringXY(scaledPoints)
+
+    return svg.pathStringXY(this.cull(scaledPoints))
+  }
+  cull(scaledPoints) {
+    const acc = { x: [], y: [] }
+
+    for (let i = 0; i < scaledPoints.x.length; i++) {
+
+      if (i == 0 || (scaledPoints.x[i] - acc.x[acc.x.length - 1]) >= 1) {
+        acc.x.push(scaledPoints.x[i])
+        acc.y.push(scaledPoints.y[i])
+      }
+
+    }
+    console.log(scaledPoints.x.length, acc.x.length)
+    return acc;
   }
   redraw() {
     const newPath = this.getPathString()
