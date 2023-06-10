@@ -1,6 +1,6 @@
 import Plot from './plot.js'
 import * as svg from '../svgUtils/svgUtils.js'
-
+import Axis from './axis.js'
 class Chart {
     constructor(id, parent, options) {
         this.id = id
@@ -19,7 +19,7 @@ class Chart {
             })
         )
         this.data = { ...options.data }
-    
+
         this.plot = new Plot(
             this.chart,
             this.data[0],
@@ -31,9 +31,16 @@ class Chart {
                 },
                 top: 10,
                 left: 40,
-                width: this.width-60,
-                height: this.height-40
+                width: this.width - 60,
+                height: this.height - 40
             }
+        )
+
+        this.xAxis = new Axis(
+            this.chart,
+            this.id + 'xAxis',
+            { x: 40, y: this.height - 40 },
+            { range: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]] }
         )
     }
 }

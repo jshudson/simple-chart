@@ -1,28 +1,33 @@
 import * as svg from '../svgUtils/svgUtils.js';
 
 class Axis {
-    constructor(parent, id, offset, size, options) {
+    constructor(parent, id, offset,  options) {
         this.parent = parent
         this.offset = offset
-        this.size = size
 
         this.range = options.range
         this.group = this.parent.appendChild(svg.newElement('g', {
-            transform: `translate(0,${this.offset.y}`
+            transform: `translate(0,${this.offset.y})`
         }))
         this.ticks = {
-            major: 5,
-            minor: 5,
+            targetCount: 7,
             labels: {
                 enable: true,
                 values: []
             }
         }
         this.format = 'standard'
+        this.buildAxis()
 
     }
     buildAxis() {
-
+        this.group.appendChild(svg.newElement('line', {
+            x1:this.offset.x,
+            y1:0,
+            x2:this.offset.x+100,
+            y2:0,
+            stroke: 'black'
+        }))
     }
 
     findInterval(value) {
@@ -35,7 +40,7 @@ class Axis {
 
         return order * 10 ** exponent
     }
-    
+
     findNearestIndexSorted(value, array) {
         //only use for small arrays!  I'm lazy
         let difference = Math.abs(value - array[0]);

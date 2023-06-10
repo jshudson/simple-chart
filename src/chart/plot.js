@@ -61,7 +61,9 @@ class Plot {
     const acc = { x: [], y: [] }
 
     for (let i = 0; i < scaledPoints.x.length; i++) {
-
+      //find line
+      //check if first point
+      if(scaledPoints.x[i]<0){}
       if (i == 0 || (scaledPoints.x[i] - acc.x[acc.x.length - 1]) >= 1) {
         acc.x.push(scaledPoints.x[i])
         acc.y.push(scaledPoints.y[i])
