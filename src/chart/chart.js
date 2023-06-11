@@ -38,8 +38,9 @@ class Chart {
 
         this.xAxis = new Axis(
             this.chart,
-            this.id + 'xAxis',
-            { x: 40, y: this.height - 40 },
+            this.id,
+            'x',
+            { x: [40, this.width - 60], y: [10, this.height - 40] },
             { range: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]] }
         )
     }

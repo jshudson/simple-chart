@@ -55,7 +55,7 @@ class Plot {
       { x: [0, this.width], y: [this.height, 0] }
     )
 
-    return svg.pathStringXY(this.cull(scaledPoints))
+    return svg.pathStringXY((scaledPoints))
   }
   cull(scaledPoints) {
     const acc = { x: [], y: [] }
