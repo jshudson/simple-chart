@@ -16,11 +16,11 @@ const findInterval = (value) => {
 
 
 const findFirstTick = (start, interval) => {
-  return Math.ceil(interval / start) * interval
+  return Math.ceil(start / interval) * interval
 }
 
-let start = 0.1001
-let end = 0.111
+let start = 0.0416
+let end = 6
 
 let range = end - start
 let targetTicks = 7
@@ -33,6 +33,10 @@ const targetInterval = findInterval(fullinterval)
 console.log(targetInterval)
 const startTick = findFirstTick(start, targetInterval)
 console.log(startTick)
+const tickRange = end - startTick
+const tickCount = Math.ceil(tickRange / targetInterval)
+console.log(tickCount)
 
+const values = Array.from({ length: tickCount }, (e, i) => i * targetInterval + startTick)
 
-
+console.log(values)

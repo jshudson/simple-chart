@@ -19,16 +19,17 @@ class Chart {
             })
         )
         this.data = { ...options.data }
-
+        this.limits = {
+            x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
+            y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
+        }
+        this.limits = { x: [0.2342342, 4.2], y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)] }
         this.plot = new Plot(
             this.chart,
             this.data[0],
             this.id + 'plot',
             {
-                limits: {
-                    x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
-                    y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
-                },
+                limits: this.limits,
                 top: 10,
                 left: 40,
                 width: this.width - 60,
@@ -41,7 +42,7 @@ class Chart {
             this.id,
             'x',
             { x: [40, this.width - 60], y: [10, this.height - 40] },
-            { range: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]] }
+            { range: this.limits.x }
         )
     }
 }
