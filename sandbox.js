@@ -1,42 +1,25 @@
-const findInterval = (value) => {
-  const exponent = Math.floor(Math.log10(value));
-  const mantissa = value / (10 ** exponent)
-  const orders = [1, 2, 2.5, 5];
-  let difference = 10
-  let order
-  for (i in orders) {
-    let newDiff = Math.abs(orders[i] - mantissa)
-    if (newDiff < difference) {
-      difference = newDiff
-      order = orders[i]
-    }
-  }
-  return order * 10 ** exponent
+function scientific(value) {
+  const stringArray = (value2.toExponential() + '').split("e");
+  const mantissa = parseFloat(stringArray[0]);
+  const exponent = parseInt(stringArray[1]);
+  return { mantissa, exponent }
 }
 
+console.time('math')
+const value = 10023540
+const exponent = Math.floor(Math.log10(value));
+const mantissa = value / (10 ** exponent);
+console.timeEnd('math')
 
-const findFirstTick = (start, interval) => {
-  return Math.ceil(start / interval) * interval
-}
 
-let start = 0.0416
-let end = 6
+console.time('parse')
+const value2 = 10023540
+const myarray = (value2.toExponential() + '').split("e");
+const mantissa2 = parseFloat(myarray[0]);
+const exponent2 = parseInt(myarray[1]);
+console.timeEnd('parse')
 
-let range = end - start
-let targetTicks = 7
-
-let fullinterval = range / targetTicks
-
-console.log(fullinterval)
-
-const targetInterval = findInterval(fullinterval)
-console.log(targetInterval)
-const startTick = findFirstTick(start, targetInterval)
-console.log(startTick)
-const tickRange = end - startTick
-const tickCount = Math.ceil(tickRange / targetInterval)
-console.log(tickCount)
-
-const values = Array.from({ length: tickCount }, (e, i) => i * targetInterval + startTick)
-
-console.log(values)
+console.time('function')
+const value3 = 10023540
+const stuff = scientific(value3)
+console.timeEnd('function')

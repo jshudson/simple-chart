@@ -4,11 +4,11 @@ import Axis from './axis.js'
 class Chart {
     constructor(id, parent, options) {
         this.id = id
-        this.width = parent.offsetWidth
-        this.height = parent.offsetHeight
 
         //parent is a div
         this.parent = parent
+        this.width = parent.offsetWidth
+        this.height = parent.offsetHeight
 
         //chart is the root SVG element
         this.chart = this.parent.appendChild(
@@ -23,27 +23,72 @@ class Chart {
             x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
             y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
         }
-        this.limits = { x: [0.2342342, 4], y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)] }
+        this.limits = {
+            x: [0,6],
+            y: [-0.2,10]
+        }
+
+        this.pad = {
+            top: 10,
+            right: 10,
+            bottom: 10,
+            left: 0,
+        }
+
+        this.axes = {
+            x: new Axis(
+                this.chart,
+                this.id,
+                'x',
+                {
+                    range: this.limits.x,
+                    label: 'Time[min]',
+                    format: 'standard'
+                }
+            ),
+            y: new Axis(
+                this.chart,
+                this.id,
+                'y',
+                {
+                    range: this.limits.y,
+                    label: 'Moose Cakes Are Awful',
+                    format: 'scientific'
+                }
+            )
+        }
+        const xDimension = this.axes.x.getDimension()
+        const yDimension = this.axes.y.getDimension()
+        const plotDimensions = {
+            top: this.pad.top,
+            left: this.pad.left + yDimension,
+            width: this.width - this.pad.left - yDimension - this.pad.right,
+            height: this.height - this.pad.top - xDimension - this.pad.bottom
+        }
+        
         this.plot = new Plot(
             this.chart,
             this.data[0],
             this.id + 'plot',
             {
                 limits: this.limits,
-                top: 10,
-                left: 40,
-                width: this.width - 60,
-                height: this.height - 40
+                ...plotDimensions
             }
         )
+        
+        this.axes.x.redrawAxis(plotDimensions)
+        this.axes.y.redrawAxis(plotDimensions)
 
-        this.xAxis = new Axis(
-            this.chart,
-            this.id,
-            'x',
-            { x: [40, this.width - 60], y: [10, this.height - 40] },
-            { range: this.limits.x }
-        )
+    }
+    addAxis(direction) {
+        if (direction = 'x') {
+
+        }
+    }
+    moveAxis(direction, offset) {
+        this.xAxis
+    }
+    update() {
     }
 }
 

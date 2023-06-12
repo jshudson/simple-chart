@@ -8,6 +8,8 @@ class Plot {
     //remove later
     this.width = options.width
     this.height = options.height
+
+  
     this.left = options.left;
     this.top = options.top;
 
@@ -21,22 +23,26 @@ class Plot {
       svg.newElement('g',
         {
           id: this.id,
-          transform: `translate(${options.left},${options.top})`,
-          "clip-path": `url(#${this.id}-clip-path)`
+          transform: `translate(${options.left},${options.top})`
         }
       )
     )
-
     this.clip = this.group.appendChild(
       svg.clipRect(0, 0, options.width, options.height,
         { id: this.id + '-clip-path' })
     )
-
+    this.outline = this.group.appendChild(
+      svg.rect(0,0,options.width,options.height, {
+        fill: 'none',
+        stroke: 'black'
+      })
+    )
     this.path = this.group.appendChild(
       svg.newElement('path',
         {
           id: this.id + '-plot',
           class: 'plot',
+          "clip-path": `url(#${this.id}-clip-path)`
         })
     )
 
@@ -70,7 +76,7 @@ class Plot {
       }
 
     }
-    console.log(scaledPoints.x.length, acc.x.length)
+
     return acc;
   }
   redraw() {

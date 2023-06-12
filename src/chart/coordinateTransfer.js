@@ -30,9 +30,7 @@ export function transform1DArray(points, sourceA, sourceB, targetA, targetB) {
 export function transformXYObj(points, sourceRect, targetRect) {
     const { x: [sx1, sx2], y: [sy1, sy2] } = sourceRect
     const { x: [tx1, tx2], y: [ty1, ty2] } = targetRect
-    console.log(points)
-    console.log(sourceRect)
-    console.log(targetRect)
+
     return {
         x: transform1DArray(points.x, sx1, sx2, tx1, tx2),
         y: transform1DArray(points.y, sy1, sy2, ty1, ty2)

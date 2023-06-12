@@ -12,20 +12,7 @@ const xyToObject = (data) => {
 const points = xyToObject(data);
 
 const chart = new Chart("graphtest", document.getElementById('graph'), { data: [points] })
-
-// console.log(data2.flatMap(x => x))
-// const x = new Float64Array(data2.flatMap(num => num))
-
-// console.log(base64ArrayBuffer(x.buffer))
-
-
-
-
-
-// const points2 = xyToObject(data);
-// const MyChart = new Chart(document.getElementById("graph"))
-
-// MyChart.addPlot(points);
-// MyChart.addPlot(points2);
-// MyChart.resetPlot();
-// MyChart.updatePlot()
+// setTimeout(() => {
+//     console.log('update')
+//     chart.update()
+// }, 1000)

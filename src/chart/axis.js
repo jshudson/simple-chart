@@ -2,95 +2,156 @@ import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 
 class Axis {
-    constructor(parent, id, direction, plotDimensions, options) {
+    constructor(parent, id, direction, options) {
         this.parent = parent;
         this.direction = direction;
-        if (this.direction = 'x') {
-            this.axisCoords = {
-                x: [plotDimensions.x[0], plotDimensions.x[1] + plotDimensions.x[0]],
-                y: [plotDimensions.y[0] + plotDimensions.y[1], plotDimensions.y[0] + plotDimensions.y[1]]
+        this.id = `${id}-${this.direction}-axis`
+
+        console.log('axis options', options)
+
+        this.range = options.range;
+        this.label = options.label;
+
+        this.ticks = {
+            targetCount: 5,
+        }
+
+        this.format = 'standard'
+    }
+
+    getDimension(range) {
+        console.log('getting dimension', this.direction)
+        range = this.range
+        const tempDimensions = {
+            top: 0,
+            left: 0,
+            width: 100,
+            height: 100
+        }
+        const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden' }))
+        this.drawAxis(temp, tempDimensions, range)
+        const bBox = temp.getBBox()
+        // temp.remove()
+
+        return this.direction == 'x' ? bBox.height : bBox.width
+    }
+    drawAxis(parent, plotDimensions, range) {
+        console.log('drawing ', this.direction)
+        let axisScreenCoords = {}
+        let offset = {}
+
+        if (this.direction == 'x') {
+            offset = {
+                x: 0,
+                y: plotDimensions.top + plotDimensions.height
+            }
+            axisScreenCoords = {
+                x: [plotDimensions.left, plotDimensions.width + plotDimensions.left],
+                y: [0, 10]
             }
         } else {
-            this.axisCoords = {
-                x: [plotDimensions.x[0], plotDimensions.x[0]],
-                y: [plotDimensions.y[0], plotDimensions.y[1]]
+            offset = {
+                x: plotDimensions.left,
+                y: 0
+            }
+            axisScreenCoords = {
+                x: [0, -10],
+                y: [plotDimensions.top + plotDimensions.height, plotDimensions.top]
             }
         }
-        this.range = options.range;
 
-        this.group = this.parent.appendChild(svg.newElement('g', {
-            transform: `translate(0,${this.axisCoords.y[0]})`
-        }))
-        this.ticks = {
-            targetCount: 7,
-        }
-        this.format = 'standard'
-        this.buildAxis()
+        parent.setAttribute('transform', `translate(${offset.x},${offset.y})`)
+
+        // this.line = parent.appendChild(svg.newElement('line', {
+        //     x1: lineCoords.x[0],
+        //     x2: lineCoords.x[1],
+        //     y1: lineCoords.y[0],
+        //     y2: lineCoords.y[1],
+        //     stroke: 'black'
+        // }));
+        this.addTicks(axisScreenCoords, range, parent);
 
     }
-    buildAxis() {
-        this.line = this.group.appendChild(svg.newElement('line', {
-            x1: this.axisCoords.x[0],
-            y1: 0,
-            x2: this.axisCoords.x[1],
-            y2: 0,
+    redrawAxis(plotDimensions, range) {
+        range = this.range
+        if (this.group) this.group.remove()
+        this.group = this.parent.appendChild(svg.newElement('g', { id: `${this.id}-${this.direction}-axis` }))
+        this.drawAxis(this.group, plotDimensions, range)
+    }
+    addTicks(screenRange, dataRange, parent) {
+        console.log('screenRange', screenRange)
+        const labelLeft = this.addAxisLabel(this.label, parent, {
+            x: screenRange.x[1],
+            y: screenRange.y[1]
+        }).getBBox().x
+
+        const range = dataRange[1] - dataRange[0];
+
+        const trueInterval = range / this.ticks.targetCount;
+
+        const { interval, digits } = this.findInterval(trueInterval);
+
+        const firstTick = this.findFirstTick(dataRange[0], interval);
+
+        const tickCount = Math.ceil((dataRange[1] - firstTick) / interval)
+        const values = Array.from({ length: tickCount }, (e, i) => i * interval + firstTick)
+        const coords = xform.transform1DArray(values, dataRange[0], dataRange[1], screenRange[this.direction][0], screenRange[this.direction][1])
+
+        const ticks = parent.appendChild(svg.newElement('g', {}))
+
+        values.forEach((e, i) => {
+            this.addTick(ticks, coords[i], 5)
+            const newLabel = this.addTickLabel(e.toFixed(digits), ticks, coords[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
+            const labelBox = newLabel.getBBox();
+            // if (labelBox.x + labelBox.width >= labelLeft) newLabel.remove()
+        })
+
+    }
+    addTick(parent, coord, size) {
+        const perpendicular = this.direction === 'x' ? 'y' : 'x'
+        if (this.direction == 'y') size *= -1
+        return parent.appendChild(svg.newElement('line', {
+            [`${this.direction}1`]: coord,
+            [`${this.direction}2`]: coord,
+            [`${perpendicular}1`]: 0,
+            [`${perpendicular}2`]: size,
             stroke: 'black'
-        }));
-        this.addTicks();
+        }))
     }
-    addTicks() {
-        const range = this.range[1] - this.range[0];
-        console.log(range);
-        const fullInterval = range / this.ticks.targetCount;
-        console.log(fullInterval);
-        const targetInterval = this.findInterval(fullInterval);
-        console.log(targetInterval);
-        const firstTick = this.findFirstTick(this.range[0], targetInterval.interval);
-        const tickCount = Math.ceil((this.range[1] - firstTick) / targetInterval.interval)
-        const values = Array.from({ length: tickCount }, (e, i) => i * targetInterval.interval + firstTick)
-        const coords = xform.transform1DArray(values, this.range[0], this.range[1], this.axisCoords.x[0], this.axisCoords.x[1])
-        const ticks = this.group.appendChild(svg.newElement('g', {}))
-        const label = this.group.appendChild(svg.newElement('text', {
+    addTickLabel(text, parent, coord, spacing) {
+        const perpendicular = this.direction === 'x' ? 'y' : 'x'
+        const baseline = this.direction === 'x' ? 'hanging' : 'middle'
+        const anchor = this.direction === 'x' ? 'middle' : 'end'
+        const label = parent.appendChild(svg.newElement('text', {
+            [this.direction]: coord,
+            [perpendicular]: spacing,
+            'dominant-baseline': baseline,
+            'text-anchor': anchor,
+        }))
+        label.innerHTML = text
+        return label
+    }
+    addAxisLabel(text, parent, coordinates) {
+
+        const label = parent.appendChild(svg.newElement('text', {
             'text-anchor': 'end',
             'dominant-baseline': 'hanging',
-            x: this.axisCoords.x[1],
-            y: 10
+            x: coordinates.x,
+            y: coordinates.y
         }))
-        label.innerHTML = 'Time[min]'
-        const labelLeft = label.getBBox().x
-        values.forEach((e, i) => {
-
-            ticks.appendChild(svg.newElement('line', {
-                x1: coords[i],
-                x2: coords[i],
-                y1: 0,
-                y2: 5,
-                stroke: 'black'
-
-            }))
-            const newLabel = this.group.appendChild(svg.newElement('text', {
-                x: coords[i],
-                y: 10,
-                'text-anchor': 'middle',
-                'dominant-baseline': 'hanging'
-            }))
-            newLabel.innerHTML = e.toFixed(targetInterval.digits)
-            const labelBox = newLabel.getBBox();
-            if(labelBox.x+labelBox.width >= labelLeft){
-                newLabel.remove()
-            }
-        })
-        console.log(ticks.getBBox().width)
+        label.innerHTML = text
+        return label
     }
+
 
     findInterval(value) {
         const exponent = Math.floor(Math.log10(value));
         const mantissa = value / (10 ** exponent);
 
         const orders = [1, 2, 2.5, 5];
-        console.log(mantissa)
+
         const order = orders[this.findNearestIndexSorted(mantissa, orders)];
-        console.log(order)
+
         const digits = exponent < 0 ? (Math.abs(exponent) + (order == 2.5 ? 1 : 0)) : 0
 
         return {
