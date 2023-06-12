@@ -57,6 +57,7 @@ class Chart {
                 }
             )
         }
+        console.time('draw')
         const xDimension = this.axes.x.getDimension()
         const yDimension = this.axes.y.getDimension()
         const plotDimensions = {
@@ -78,7 +79,7 @@ class Chart {
         
         this.axes.x.redrawAxis(plotDimensions)
         this.axes.y.redrawAxis(plotDimensions)
-
+        console.timeEnd('draw')
     }
     addAxis(direction) {
         if (direction = 'x') {
