@@ -177,12 +177,12 @@ function appendNewElement(parent, tagName, attributes, NS) {
     return child;
 }
 
-function scientific(value) {
-    const stringArray = (value2.toExponential() + '').split("e");
-    const mantissa = parseFloat(stringArray[0]);
-    const exponent = parseInt(stringArray[1]);
-    return { mantissa, exponent }
+function getScientific(value) {
+    if (value === 0) return [0, 0]
+    const exponent = Math.floor(Math.log10(value));
+    const mantissa = value / (10 ** exponent);
+    return [mantissa, exponent]
 }
 
-export { base64ArrayBuffer, clamp, appendNewElement, scientific }
+export { base64ArrayBuffer, clamp, appendNewElement, getScientific }
 

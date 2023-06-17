@@ -25,7 +25,7 @@ class Chart {
         }
         this.limits = {
             x: [0,6],
-            y: [-0.2,10]
+            y: [-0.2,15]
         }
 
         this.pad = {

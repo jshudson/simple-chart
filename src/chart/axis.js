@@ -1,5 +1,6 @@
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
+import { getScientific } from '../utils/utils.js';
 
 class Axis {
     constructor(parent, id, direction, options) {
@@ -9,6 +10,7 @@ class Axis {
 
         console.log('axis options', options)
 
+        this.format = options.format;
         this.range = options.range;
         this.label = options.label;
 
@@ -16,7 +18,6 @@ class Axis {
             targetCount: 5,
         }
 
-        this.format = 'standard'
     }
 
     getDimension(range) {
@@ -31,7 +32,7 @@ class Axis {
         const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden' }))
         this.drawAxis(temp, tempDimensions, range)
         const bBox = temp.getBBox()
-        // temp.remove()
+        temp.remove()
 
         return this.direction == 'x' ? bBox.height : bBox.width
     }
@@ -80,10 +81,6 @@ class Axis {
     }
     addTicks(screenRange, dataRange, parent) {
         console.log('screenRange', screenRange)
-        const labelLeft = this.addAxisLabel(this.label, parent, {
-            x: screenRange.x[1],
-            y: screenRange.y[1]
-        }).getBBox().x
 
         const range = dataRange[1] - dataRange[0];
 
@@ -97,15 +94,42 @@ class Axis {
         const values = Array.from({ length: tickCount }, (e, i) => i * interval + firstTick)
         const coords = xform.transform1DArray(values, dataRange[0], dataRange[1], screenRange[this.direction][0], screenRange[this.direction][1])
 
+        const [, lastExponent] = getScientific(values[values.length - 1])
+        const labelText = this.label + (this.format == 'scientific' ? lastExponent : '')
+        const axisLabel = this.addAxisLabel(labelText, parent, {
+            x: screenRange.x[1],
+            y: screenRange.y[1]
+        }).getBBox()
+
+
         const ticks = parent.appendChild(svg.newElement('g', {}))
 
         values.forEach((e, i) => {
             this.addTick(ticks, coords[i], 5)
-            const newLabel = this.addTickLabel(e.toFixed(digits), ticks, coords[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
-            const labelBox = newLabel.getBBox();
-            // if (labelBox.x + labelBox.width >= labelLeft) newLabel.remove()
+
+            const tickLabelText = this.getFormattedText(e, digits, lastExponent) //e.toFixed(digits)
+            const newTickLabel = this.addTickLabel(tickLabelText, ticks, coords[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
+
+            const labelBox = newTickLabel.getBBox();
+            if (this.direction == 'x') {
+                if (labelBox.x + labelBox.width >= axisLabel.x) newTickLabel.remove()
+            } else {
+                if (labelBox.y <= axisLabel.y + axisLabel.height) newTickLabel.remove()
+            }
         })
 
+    }
+    getFormattedText(value, digits, exponent) {
+        // if (this.format == 'scientific') {
+        //     return this.getScientificText(value, digits, exponent)
+        // }
+        console.log(this.direction,'digits',digits)
+        return value.toFixed(digits)
+    }
+    getScientificText(value, digits, exponent) {
+        const divisor = 10 ** exponent
+        const mantissa = value / divisor
+        return mantissa.toFixed(2)
     }
     addTick(parent, coord, size) {
         const perpendicular = this.direction === 'x' ? 'y' : 'x'
@@ -145,8 +169,8 @@ class Axis {
 
 
     findInterval(value) {
-        const exponent = Math.floor(Math.log10(value));
-        const mantissa = value / (10 ** exponent);
+
+        const [mantissa, exponent] = getScientific(value)
 
         const orders = [1, 2, 2.5, 5];
 
