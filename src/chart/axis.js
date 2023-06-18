@@ -1,6 +1,6 @@
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
-import { getScientific } from '../utils/utils.js';
+import { getScientific, superscript } from '../utils/utils.js';
 
 class Axis {
     constructor(parent, id, direction, options) {
@@ -86,7 +86,7 @@ class Axis {
 
         const trueInterval = range / this.ticks.targetCount;
 
-        const { interval, digits } = this.findInterval(trueInterval);
+        const { interval, extraDigits } = this.findInterval(trueInterval);
 
         const firstTick = this.findFirstTick(dataRange[0], interval);
 
@@ -94,8 +94,15 @@ class Axis {
         const values = Array.from({ length: tickCount }, (e, i) => i * interval + firstTick)
         const coords = xform.transform1DArray(values, dataRange[0], dataRange[1], screenRange[this.direction][0], screenRange[this.direction][1])
 
-        const [, lastExponent] = getScientific(values[values.length - 1])
-        const labelText = this.label + (this.format == 'scientific' ? lastExponent : '')
+        const exponents = values.map((e) => {
+            const [, exponent] = getScientific(e)
+            return exponent
+        }).filter(e => Number.isFinite(e))
+
+        const maxExponent = Math.max(...exponents);
+        const minExponent = Math.min(...exponents);
+
+        const labelText = this.label + (this.format == 'scientific' ? ` ×10${superscript(maxExponent)}` : '')
         const axisLabel = this.addAxisLabel(labelText, parent, {
             x: screenRange.x[1],
             y: screenRange.y[1]
@@ -107,7 +114,7 @@ class Axis {
         values.forEach((e, i) => {
             this.addTick(ticks, coords[i], 5)
 
-            const tickLabelText = this.getFormattedText(e, digits, lastExponent) //e.toFixed(digits)
+            const tickLabelText = this.getFormattedText(e, extraDigits, minExponent, maxExponent)
             const newTickLabel = this.addTickLabel(tickLabelText, ticks, coords[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
 
             const labelBox = newTickLabel.getBBox();
@@ -119,17 +126,20 @@ class Axis {
         })
 
     }
-    getFormattedText(value, digits, exponent) {
-        // if (this.format == 'scientific') {
-        //     return this.getScientificText(value, digits, exponent)
-        // }
-        console.log(this.direction,'digits',digits)
+    getFormattedText(value, extraDigits, minExponent, maxExponent) {
+        if (this.format == 'scientific') {
+            return this.getScientificText(value, extraDigits, minExponent, maxExponent)
+        }
+        console.log(this.direction, minExponent, maxExponent)
+        const absMax = Math.max(Math.abs(minExponent), Math.abs(maxExponent))
+        const digits = (maxExponent || minExponent) < 0 ? absMax + extraDigits : 0
+        console.log(this.direction, 'digits', digits, value)
         return value.toFixed(digits)
     }
-    getScientificText(value, digits, exponent) {
-        const divisor = 10 ** exponent
+    getScientificText(value, extraDigits, minExponent, maxExponent) {
+        const divisor = 10 ** maxExponent
         const mantissa = value / divisor
-        return mantissa.toFixed(2)
+        return mantissa.toFixed((maxExponent - minExponent) + extraDigits)
     }
     addTick(parent, coord, size) {
         const perpendicular = this.direction === 'x' ? 'y' : 'x'
@@ -176,11 +186,11 @@ class Axis {
 
         const order = orders[this.findNearestIndexSorted(mantissa, orders)];
 
-        const digits = exponent < 0 ? (Math.abs(exponent) + (order == 2.5 ? 1 : 0)) : 0
+        const digits = order == 2.5 ? 1 : 0//exponent < 0 ? (Math.abs(exponent) + (order == 2.5 ? 1 : 0)) : 0
 
         return {
             interval: order * 10 ** exponent,
-            digits: digits
+            extraDigits: digits
         }
     }
 

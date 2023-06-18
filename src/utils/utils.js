@@ -39,7 +39,7 @@ function baseClamp(number, lower, upper) {
  * _.clamp(10, -5, 5);
  * // => 5
  */
-function clamp(number, lower, upper) {
+export function clamp(number, lower, upper) {
     if (upper === undefined) {
         upper = lower;
         lower = undefined;
@@ -116,7 +116,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-function base64ArrayBuffer(arrayBuffer) {
+export function base64ArrayBuffer(arrayBuffer) {
     var base64 = ''
     var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
@@ -168,7 +168,7 @@ function base64ArrayBuffer(arrayBuffer) {
     return base64
 }
 
-function appendNewElement(parent, tagName, attributes, NS) {
+export function appendNewElement(parent, tagName, attributes, NS) {
     const child = NS ? document.createElementNS(NS, tagName) : document.createElement(tagName)
     Object.keys(attributes).forEach(key => {
         child.setAttribute(key, attributes[key])
@@ -177,12 +177,22 @@ function appendNewElement(parent, tagName, attributes, NS) {
     return child;
 }
 
-function getScientific(value) {
-    if (value === 0) return [0, 0]
-    const exponent = Math.floor(Math.log10(value));
+export function getScientific(value) {
+    if (value === 0) return [0, NaN]
+    const exponent = Math.floor(Math.log10(Math.abs(value)));
     const mantissa = value / (10 ** exponent);
     return [mantissa, exponent]
 }
 
-export { base64ArrayBuffer, clamp, appendNewElement, getScientific }
+function digitFromSuperscript(superChar) {
+    const result = "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(superChar);
+    if (result > -1) { return result; }
+    else { return superChar; }
+}
+function charToSuperscript(number) {
+    return "⁰¹²³⁴⁵⁶⁷⁸⁹"[number]
+}
 
+export const superscript = (number) => {
+    return number.toString().replace(/./g, charToSuperscript)
+}

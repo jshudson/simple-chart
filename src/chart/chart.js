@@ -24,8 +24,8 @@ class Chart {
             y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
         }
         this.limits = {
-            x: [0,6],
-            y: [-0.2,15]
+            x: [0,0.123],
+            y: [-0.2,150]
         }
 
         this.pad = {
@@ -66,7 +66,7 @@ class Chart {
             width: this.width - this.pad.left - yDimension - this.pad.right,
             height: this.height - this.pad.top - xDimension - this.pad.bottom
         }
-        
+
         this.plot = new Plot(
             this.chart,
             this.data[0],
@@ -76,7 +76,7 @@ class Chart {
                 ...plotDimensions
             }
         )
-        
+
         this.axes.x.redrawAxis(plotDimensions)
         this.axes.y.redrawAxis(plotDimensions)
         console.timeEnd('draw')
