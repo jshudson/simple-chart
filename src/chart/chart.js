@@ -24,8 +24,8 @@ class Chart {
             y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
         }
         this.limits = {
-            x: [-15,10],
-            y: [-0.2,14]
+            x: [-1,10],
+            y: [-0.2,125]
         }
 
         this.pad = {
@@ -52,7 +52,7 @@ class Chart {
                 'y',
                 {
                     range: this.limits.y,
-                    label: 'Moose Cakes Are Awful',
+                    label: 'mAU',
                     format: 'scientific'
                 }
             )

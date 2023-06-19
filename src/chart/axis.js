@@ -102,11 +102,20 @@ class Axis {
         const maxExponent = Math.max(...exponents);
         const minExponent = Math.min(...exponents);
 
-        const labelText = this.label + (this.format == 'scientific' ? ` ×10${superscript(maxExponent)}` : '')
-        const axisLabel = this.addAxisLabel(labelText, parent, {
+        const labelText = this.label
+        const yAxisGroup = parent.appendChild(svg.newElement('g', { id: 'blah' }))
+        const yLabel = this.addAxisLabel(labelText, yAxisGroup, {
             x: screenRange.x[1],
             y: screenRange.y[1]
         }).getBBox()
+        if (this.format == 'scientific') {
+            this.addAxisLabel(` ×10${superscript(maxExponent)}`, yAxisGroup, {
+                x: screenRange.x[1],
+                y: screenRange.y[1] + yLabel.height
+            })
+            console.log('tried to add label');
+        }
+        const yAxisLabelBox = yAxisGroup.getBBox()
 
 
         const ticks = parent.appendChild(svg.newElement('g', {}))
@@ -119,9 +128,9 @@ class Axis {
 
             const labelBox = newTickLabel.getBBox();
             if (this.direction == 'x') {
-                if (labelBox.x + labelBox.width >= axisLabel.x) newTickLabel.remove()
+                if (labelBox.x + labelBox.width >= yAxisLabelBox.x) newTickLabel.remove()
             } else {
-                if (labelBox.y <= axisLabel.y + axisLabel.height) newTickLabel.remove()
+                if (labelBox.y <= yAxisLabelBox.y + yAxisLabelBox.height) newTickLabel.remove()
             }
         })
 
