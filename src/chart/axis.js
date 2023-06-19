@@ -8,36 +8,26 @@ class Axis {
         this.direction = direction;
         this.id = `${id}-${this.direction}-axis`
 
-        console.log('axis options', options)
 
         this.format = options.format;
-        this.range = options.range;
         this.label = options.label;
-
-        this.ticks = {
-            targetCount: 5,
-        }
-
     }
 
     getDimension(range) {
-        console.log('getting dimension', this.direction)
-        range = this.range
-        const tempDimensions = {
+        const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden' }))
+        this.drawAxis(temp, {
             top: 0,
             left: 0,
             width: 100,
             height: 100
-        }
-        const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden' }))
-        this.drawAxis(temp, tempDimensions, range)
+        }, range)
         const bBox = temp.getBBox()
         temp.remove()
 
         return this.direction == 'x' ? bBox.height : bBox.width
     }
     drawAxis(parent, plotDimensions, range) {
-        console.log('drawing ', this.direction)
+
         let axisScreenCoords = {}
         let offset = {}
 
@@ -74,17 +64,16 @@ class Axis {
 
     }
     redrawAxis(plotDimensions, range) {
-        range = this.range
         if (this.group) this.group.remove()
-        this.group = this.parent.appendChild(svg.newElement('g', { id: `${this.id}-${this.direction}-axis` }))
+        this.group = this.parent.appendChild(svg.newElement('g', { id: `${this.id}` }))
         this.drawAxis(this.group, plotDimensions, range)
     }
     addTicks(screenRange, dataRange, parent) {
-        console.log('screenRange', screenRange)
 
         const range = dataRange[1] - dataRange[0];
+        const targetTicks = Math.max(Math.ceil(Math.abs(screenRange[this.direction][1]-screenRange[this.direction][0])/90),5)
 
-        const trueInterval = range / this.ticks.targetCount;
+        const trueInterval = range / targetTicks
 
         const { interval, extraDigits } = this.findInterval(trueInterval);
 
@@ -94,28 +83,21 @@ class Axis {
         const values = Array.from({ length: tickCount }, (e, i) => i * interval + firstTick)
         const coords = xform.transform1DArray(values, dataRange[0], dataRange[1], screenRange[this.direction][0], screenRange[this.direction][1])
 
-        const exponents = values.map((e) => {
-            const [, exponent] = getScientific(e)
-            return exponent
-        }).filter(e => Number.isFinite(e))
+        
+        const [minExponent, maxExponent] = this.getExponentRange(values)
 
-        const maxExponent = Math.max(...exponents);
-        const minExponent = Math.min(...exponents);
-
-        const labelText = this.label
-        const yAxisGroup = parent.appendChild(svg.newElement('g', { id: 'blah' }))
-        const yLabel = this.addAxisLabel(labelText, yAxisGroup, {
+        const axisLabelGroup = parent.appendChild(svg.newElement('g', {}))
+        const axisLabel = this.addAxisLabel(this.label, axisLabelGroup, {
             x: screenRange.x[1],
             y: screenRange.y[1]
         }).getBBox()
         if (this.format == 'scientific') {
-            this.addAxisLabel(` ×10${superscript(maxExponent)}`, yAxisGroup, {
+            this.addAxisLabel(` ×10${superscript(maxExponent)}`, axisLabelGroup, {
                 x: screenRange.x[1],
-                y: screenRange.y[1] + yLabel.height
+                y: screenRange.y[1] + axisLabel.height
             })
-            console.log('tried to add label');
         }
-        const yAxisLabelBox = yAxisGroup.getBBox()
+        const yAxisLabelBox = axisLabelGroup.getBBox()
 
 
         const ticks = parent.appendChild(svg.newElement('g', {}))
@@ -135,6 +117,17 @@ class Axis {
         })
 
     }
+    getExponentRange(values) {
+        const exponents = values.map((e) => {
+            const [, exponent] = getScientific(e);
+            return exponent;
+        }).filter(e => Number.isFinite(e));
+
+        const minExponent = Math.min(...exponents);
+        const maxExponent = Math.max(...exponents);
+        return [minExponent,maxExponent]
+    }
+
     getFormattedText(value, extraDigits, minExponent, maxExponent) {
         if (this.format == 'scientific') {
             return this.getScientificText(value, extraDigits, minExponent, maxExponent)
@@ -142,7 +135,6 @@ class Axis {
         console.log(this.direction, minExponent, maxExponent)
         const absMax = Math.max(Math.abs(minExponent), Math.abs(maxExponent))
         const digits = (maxExponent || minExponent) < 0 ? absMax + extraDigits : 0
-        console.log(this.direction, 'digits', digits, value)
         return value.toFixed(digits)
     }
     getScientificText(value, extraDigits, minExponent, maxExponent) {
