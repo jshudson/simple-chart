@@ -1,6 +1,11 @@
+// @ts-check
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 import { getScientific, superscript } from '../utils/utils.js';
+
+interface MooseCase {
+    id: number
+}
 
 class Axis {
     constructor(parent, id, direction, options) {
@@ -63,19 +68,15 @@ class Axis {
         this.addTicks(axisScreenCoords, range, parent);
 
     }
-    redrawAxis(plotDimensions, range) {
-        if (this.group) this.group.remove()
-        this.group = this.parent.appendChild(svg.newElement('g', { id: `${this.id}` }))
-        this.drawAxis(this.group, plotDimensions, range)
-    }
+
     addTicks(screenRange, dataRange, parent) {
 
         const range = dataRange[1] - dataRange[0];
-        const targetTicks = Math.max(Math.ceil(Math.abs(screenRange[this.direction][1]-screenRange[this.direction][0])/90),5)
+        const targetTicks = Math.max(Math.ceil(Math.abs(screenRange[this.direction][1] - screenRange[this.direction][0]) / 90), 5)
 
         const trueInterval = range / targetTicks
 
-        const { interval, extraDigits } = this.findInterval(trueInterval);
+        const { interval, extraDigits } = this.findRoundedInterval(trueInterval);
 
         const firstTick = this.findFirstTick(dataRange[0], interval);
 
@@ -83,7 +84,7 @@ class Axis {
         const values = Array.from({ length: tickCount }, (e, i) => i * interval + firstTick)
         const coords = xform.transform1DArray(values, dataRange[0], dataRange[1], screenRange[this.direction][0], screenRange[this.direction][1])
 
-        
+
         const [minExponent, maxExponent] = this.getExponentRange(values)
 
         const axisLabelGroup = parent.appendChild(svg.newElement('g', {}))
@@ -103,7 +104,7 @@ class Axis {
         const ticks = parent.appendChild(svg.newElement('g', {}))
 
         values.forEach((e, i) => {
-            this.addTick(ticks, coords[i], 5)
+            this.addTickLine(ticks, coords[i], 5)
 
             const tickLabelText = this.getFormattedText(e, extraDigits, minExponent, maxExponent)
             const newTickLabel = this.addTickLabel(tickLabelText, ticks, coords[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
@@ -115,7 +116,6 @@ class Axis {
                 if (labelBox.y <= yAxisLabelBox.y + yAxisLabelBox.height) newTickLabel.remove()
             }
         })
-
     }
     getExponentRange(values) {
         const exponents = values.map((e) => {
@@ -125,7 +125,7 @@ class Axis {
 
         const minExponent = Math.min(...exponents);
         const maxExponent = Math.max(...exponents);
-        return [minExponent,maxExponent]
+        return [minExponent, maxExponent]
     }
 
     getFormattedText(value, extraDigits, minExponent, maxExponent) {
@@ -142,7 +142,7 @@ class Axis {
         const mantissa = value / divisor
         return mantissa.toFixed((maxExponent - minExponent) + extraDigits)
     }
-    addTick(parent, coord, size) {
+    addTickLine(parent, coord, size) {
         const perpendicular = this.direction === 'x' ? 'y' : 'x'
         if (this.direction == 'y') size *= -1
         return parent.appendChild(svg.newElement('line', {
@@ -178,8 +178,7 @@ class Axis {
         return label
     }
 
-
-    findInterval(value) {
+    findRoundedInterval(value) {
 
         const [mantissa, exponent] = getScientific(value)
 
@@ -208,8 +207,15 @@ class Axis {
         }
         return index;
     }
+
     findFirstTick(start, interval) {
         return Math.ceil(start / interval) * interval
+    }
+
+    render(plotDimensions, range) {
+        if (this.group) this.group.remove()
+        this.group = this.parent.appendChild(svg.newElement('g', { id: `${this.id}` }))
+        this.drawAxis(this.group, plotDimensions, range)
     }
 }
 

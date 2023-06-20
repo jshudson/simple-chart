@@ -2,6 +2,7 @@ import exported from './data.js'
 const { data, data2 } = exported
 // import Chart from './src/chart/chartClassNew.js'
 import Chart from './src/chart/chart.js'
+import * as svg from './src/svgUtils/svgUtils.js'
 
 import { base64ArrayBuffer } from './src/utils/utils.js'
 

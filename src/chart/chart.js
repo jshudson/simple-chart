@@ -69,8 +69,8 @@ class Chart {
             this.id + 'plot',
         )
         this.plot.redraw(this.limits,plotDimensions,this.data[0])
-        this.axes.x.redrawAxis(plotDimensions,this.limits.x)
-        this.axes.y.redrawAxis(plotDimensions,this.limits.y)
+        this.axes.x.render(plotDimensions,this.limits.x)
+        this.axes.y.render(plotDimensions,this.limits.y)
         console.timeEnd('draw')
         setTimeout(()=>{
             this.limits = {
@@ -78,8 +78,8 @@ class Chart {
                 y: [-0.2,125]
             }
             this.plot.redraw(this.limits,plotDimensions,this.data[0])
-            this.axes.x.redrawAxis(plotDimensions,this.limits.x)
-            this.axes.y.redrawAxis(plotDimensions,this.limits.y)
+            this.axes.x.render(plotDimensions,this.limits.x)
+            this.axes.y.render(plotDimensions,this.limits.y)
         },1000)
 
     }
