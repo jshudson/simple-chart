@@ -4,8 +4,8 @@ import * as xform from './coordinateTransfer.js';
 import { getScientific, superscript } from '../utils/utils.js';
 /**
  * @typedef {Object} Rect
- * @property {[number, number]} x The x coordinates
- * @property {[number, number]} y The y coordinates
+ * @property {Array<number>} x The x coordinates
+ * @property {Array<number>} y The y coordinates
  */
 
 /**
@@ -15,6 +15,7 @@ import { getScientific, superscript } from '../utils/utils.js';
  * @property {number} width
  * @property {number} height
  */
+
 class Axis {
 
     /**
@@ -59,8 +60,8 @@ class Axis {
      */
     drawAxis(parent, plotDimensions, range) {
 
-        let axisScreenCoords = {}
-        let offset = {}
+        let axisScreenCoords = { x: [0, 0], y: [0, 0] }
+        let offset = { x: 0, y: 0 }
 
         if (this.direction == 'x') {
             offset = {
@@ -95,6 +96,12 @@ class Axis {
 
     }
 
+    /**
+     * 
+     * @param {Rect} screenRange 
+     * @param {Rect} dataRange 
+     * @param {SVGElement} parent 
+     */
     addTicks(screenRange, dataRange, parent) {
 
         const range = dataRange[1] - dataRange[0];
