@@ -2,12 +2,28 @@
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 import { getScientific, superscript } from '../utils/utils.js';
+/**
+ * @typedef {Object} Rect
+ * @property {[number, number]} x The x coordinates
+ * @property {[number, number]} y The y coordinates
+ */
 
-interface MooseCase {
-    id: number
-}
-
+/**
+ * @typedef {Object} ScreenDimensions
+ * @property {number} left
+ * @property {number} top
+ * @property {number} width
+ * @property {number} height
+ */
 class Axis {
+
+    /**
+     * Constructor
+     * @param {SVGElement} parent Root of chart
+     * @param {String} id Id from the parent
+     * @param {String} direction Axis direction 'x' or 'y'
+     * @param {Object} options 
+     */
     constructor(parent, id, direction, options) {
         this.parent = parent;
         this.direction = direction;
@@ -17,7 +33,11 @@ class Axis {
         this.format = options.format;
         this.label = options.label;
     }
-
+    /**
+     * 
+     * @param {Rect} range 
+     * @returns {number}
+     */
     getDimension(range) {
         const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden' }))
         this.drawAxis(temp, {
@@ -31,6 +51,12 @@ class Axis {
 
         return this.direction == 'x' ? bBox.height : bBox.width
     }
+    /**
+     * 
+     * @param {SVGElement} parent 
+     * @param {ScreenDimensions} plotDimensions 
+     * @param {Rect} range 
+     */
     drawAxis(parent, plotDimensions, range) {
 
         let axisScreenCoords = {}
