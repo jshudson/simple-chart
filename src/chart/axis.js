@@ -3,12 +3,27 @@ import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 import { getScientific, superscript } from '../utils/utils.js';
 /**
- * @typedef {Object} Rect
- * @property {Array<number>} x The x coordinates
- * @property {Array<number>} y The y coordinates
+ * A two point range, low to high
+ * @typedef {[number, number]} Range
  */
 
 /**
+ * x y vector coordinate
+ * @typedef {Object} Vector
+ * @property {number} x
+ * @property {number} y
+ */
+
+/**
+ * Defines a rectangle from an x range and y range
+ * @typedef {Object} Rectangle
+ * @property {Range} x The x coordinates
+ * @property {Range} y The y coordinates
+ */
+
+
+/**
+ * Location and size of a screen element in pixels
  * @typedef {Object} ScreenDimensions
  * @property {number} left
  * @property {number} top
@@ -20,7 +35,7 @@ class Axis {
 
     /**
      * Constructor
-     * @param {SVGElement} parent Root of chart
+     * @param {SVGGraphicsElement} parent Root of chart
      * @param {String} id Id from the parent
      * @param {String} direction Axis direction 'x' or 'y'
      * @param {Object} options 
@@ -30,13 +45,12 @@ class Axis {
         this.direction = direction;
         this.id = `${id}-${this.direction}-axis`
 
-
         this.format = options.format;
         this.label = options.label;
     }
     /**
-     * 
-     * @param {Rect} range 
+     * Get the margin dimensions taken up by the axis for a certain range
+     * @param {Range} range 
      * @returns {number}
      */
     getDimension(range) {
@@ -53,14 +67,16 @@ class Axis {
         return this.direction == 'x' ? bBox.height : bBox.width
     }
     /**
-     * 
-     * @param {SVGElement} parent 
+     * Draw an axis
+     * @param {SVGGraphicsElement} parent 
      * @param {ScreenDimensions} plotDimensions 
-     * @param {Rect} range 
+     * @param {Range} range 
      */
     drawAxis(parent, plotDimensions, range) {
-
+        /**@type {Rectangle} */
         let axisScreenCoords = { x: [0, 0], y: [0, 0] }
+
+        /**@type {Vector} */
         let offset = { x: 0, y: 0 }
 
         if (this.direction == 'x') {
@@ -85,72 +101,102 @@ class Axis {
 
         parent.setAttribute('transform', `translate(${offset.x},${offset.y})`)
 
-        // this.line = parent.appendChild(svg.newElement('line', {
-        //     x1: lineCoords.x[0],
-        //     x2: lineCoords.x[1],
-        //     y1: lineCoords.y[0],
-        //     y2: lineCoords.y[1],
-        //     stroke: 'black'
-        // }));
-        this.addTicks(axisScreenCoords, range, parent);
+        this.labelAxis(axisScreenCoords, range, parent);
+        this.addBoundingRectangle(parent, axisScreenCoords)
 
+    }
+    /**
+     * 
+     * @param {SVGGraphicsElement} parent 
+     * @param {Rectangle} axisScreenCoords
+     */
+    addBoundingRectangle(parent, axisScreenCoords) {
+        const dimensions = this.direction == 'x' ? parent.getBBox().height : parent.getBBox().width
+        const attributes = {}
+        if (this.direction == 'x') {
+            x:axisScreenCoords.x
+            y:,
+            width:,
+            height:,
+        }
+        this.group.appendChild(svg.newElement('rect', {
+            x:
+            y:
+            width:
+            height:
+        }))
     }
 
     /**
-     * 
-     * @param {Rect} screenRange 
-     * @param {Rect} dataRange 
-     * @param {SVGElement} parent 
+     * Label the axis with tick marks, tick labels, and axis labels
+     * @param {Rectangle} screenRange Screen coodinates for location of the axis
+     * @param {Range} range Axis limits in plot coordinates
+     * @param {SVGGraphicsElement} parent SVG Parent
      */
-    addTicks(screenRange, dataRange, parent) {
+    labelAxis(screenRange, range, parent) {
 
-        const range = dataRange[1] - dataRange[0];
-        const targetTicks = Math.max(Math.ceil(Math.abs(screenRange[this.direction][1] - screenRange[this.direction][0]) / 90), 5)
+        const dataWidth = range[1] - range[0];
 
-        const trueInterval = range / targetTicks
+        //minimum of 5 ticks for math to work
+        const targetTickCount = Math.max(Math.ceil(Math.abs(screenRange[this.direction][1] - screenRange[this.direction][0]) / 90), 5)
 
-        const { interval, extraDigits } = this.findRoundedInterval(trueInterval);
+        const decimalInterval = dataWidth / targetTickCount
 
-        const firstTick = this.findFirstTick(dataRange[0], interval);
+        //rounded interval with an extra digits needed from axis order
+        const { roundedInterval, extraDigits } = this.findRoundedInterval(decimalInterval);
 
-        const tickCount = Math.ceil((dataRange[1] - firstTick) / interval)
-        const values = Array.from({ length: tickCount }, (e, i) => i * interval + firstTick)
-        const coords = xform.transform1DArray(values, dataRange[0], dataRange[1], screenRange[this.direction][0], screenRange[this.direction][1])
+        const firstTick = Math.ceil(range[0] / roundedInterval) * roundedInterval
 
+        const tickCount = Math.ceil((range[1] - firstTick) / roundedInterval)
+        const tickPlotCoordinates = Array.from({ length: tickCount }, (e, i) => i * roundedInterval + firstTick)
+        
+        const tickScreenCoordinates = xform.transform1DArray(
+            tickPlotCoordinates,
+            range[0], range[1],
+            screenRange[this.direction][0], screenRange[this.direction][1]
+        )
 
-        const [minExponent, maxExponent] = this.getExponentRange(values)
+        const exponentRange = this.getExponentRange(tickPlotCoordinates)
 
         const axisLabelGroup = parent.appendChild(svg.newElement('g', {}))
         const axisLabel = this.addAxisLabel(this.label, axisLabelGroup, {
             x: screenRange.x[1],
             y: screenRange.y[1]
-        }).getBBox()
+        })
+
+        //add notation for scientific scaling
         if (this.format == 'scientific') {
-            this.addAxisLabel(` ×10${superscript(maxExponent)}`, axisLabelGroup, {
+            this.addAxisLabel(` ×10${superscript(exponentRange[1])}`, axisLabelGroup, {
                 x: screenRange.x[1],
-                y: screenRange.y[1] + axisLabel.height
+                y: screenRange.y[1] + axisLabel.getBBox().height
             })
         }
-        const yAxisLabelBox = axisLabelGroup.getBBox()
-
+        const axisLabelBox = axisLabelGroup.getBBox()
 
         const ticks = parent.appendChild(svg.newElement('g', {}))
 
-        values.forEach((e, i) => {
-            this.addTickLine(ticks, coords[i], 5)
+        tickPlotCoordinates.forEach((e, i) => {
+            this.addTickLine(ticks, tickScreenCoordinates[i], 5)
 
-            const tickLabelText = this.getFormattedText(e, extraDigits, minExponent, maxExponent)
-            const newTickLabel = this.addTickLabel(tickLabelText, ticks, coords[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
+            const tickLabelText = this.getFormattedText(e, extraDigits, exponentRange)
+            const newTickLabel = this.addTickLabel(tickLabelText, ticks, tickScreenCoordinates[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
 
-            const labelBox = newTickLabel.getBBox();
+            //remove tick labels that overlap with axis label
+            const tickLabelBox = newTickLabel.getBBox();
             if (this.direction == 'x') {
-                if (labelBox.x + labelBox.width >= yAxisLabelBox.x) newTickLabel.remove()
+                if (tickLabelBox.x + tickLabelBox.width >= axisLabelBox.x) newTickLabel.remove()
             } else {
-                if (labelBox.y <= yAxisLabelBox.y + yAxisLabelBox.height) newTickLabel.remove()
+                if (tickLabelBox.y <= axisLabelBox.y + axisLabelBox.height) newTickLabel.remove()
             }
         })
     }
+    /**
+     * 
+     * @param {Array<number>} values 
+     * @returns {Range}
+     */
     getExponentRange(values) {
+        //get exponents for all values, and filter errors from 0
         const exponents = values.map((e) => {
             const [, exponent] = getScientific(e);
             return exponent;
@@ -160,21 +206,42 @@ class Axis {
         const maxExponent = Math.max(...exponents);
         return [minExponent, maxExponent]
     }
-
-    getFormattedText(value, extraDigits, minExponent, maxExponent) {
+    /**
+     * 
+     * @param {number} value 
+     * @param {number} extraDigits 
+     * @param {Range} exponentRange 
+     * @returns 
+     */
+    getFormattedText(value, extraDigits, exponentRange) {
         if (this.format == 'scientific') {
-            return this.getScientificText(value, extraDigits, minExponent, maxExponent)
+            return this.getScientificText(value, extraDigits, exponentRange)
         }
-        console.log(this.direction, minExponent, maxExponent)
-        const absMax = Math.max(Math.abs(minExponent), Math.abs(maxExponent))
-        const digits = (maxExponent || minExponent) < 0 ? absMax + extraDigits : 0
+        //min and max exponent define how many decimals are displayed
+        const absMax = Math.max(Math.abs(exponentRange[0]), Math.abs(exponentRange[1]))
+        const digits = (exponentRange[0] || exponentRange[1]) < 0 ? absMax + extraDigits : 0
         return value.toFixed(digits)
     }
-    getScientificText(value, extraDigits, minExponent, maxExponent) {
-        const divisor = 10 ** maxExponent
+    /**
+     * 
+     * @param {number} value 
+     * @param {number} extraDigits 
+     * @param {Range} exponentRange
+     * @returns 
+     */
+    getScientificText(value, extraDigits, exponentRange) {
+        const divisor = 10 ** exponentRange[1]
         const mantissa = value / divisor
-        return mantissa.toFixed((maxExponent - minExponent) + extraDigits)
+        return mantissa.toFixed((exponentRange[1] - exponentRange[0]) + extraDigits)
     }
+
+    /**
+     * Add a tick line and return a reference
+     * @param {SVGGraphicsElement} parent SVG parent
+     * @param {number} coord 1 dimensional coordinate of the tick mark
+     * @param {number} size Size of the tick in pixels
+     * @returns {SVGGraphicsElement}
+     */
     addTickLine(parent, coord, size) {
         const perpendicular = this.direction === 'x' ? 'y' : 'x'
         if (this.direction == 'y') size *= -1
@@ -186,6 +253,14 @@ class Axis {
             stroke: 'black'
         }))
     }
+    /**
+     * Add a tick label and return a reference
+     * @param {String} text Tick label text
+     * @param {SVGGraphicsElement} parent SVG Parent
+     * @param {number} coord 1 dimensional coordinate of the label
+     * @param {number} spacing How far from the axis to draw text
+     * @returns {SVGGraphicsElement}
+     */
     addTickLabel(text, parent, coord, spacing) {
         const perpendicular = this.direction === 'x' ? 'y' : 'x'
         const baseline = this.direction === 'x' ? 'hanging' : 'middle'
@@ -199,6 +274,13 @@ class Axis {
         label.innerHTML = text
         return label
     }
+    /**
+     * Add an axis label and return a reference
+     * @param {String} text 
+     * @param {SVGGraphicsElement} parent 
+     * @param {Vector} coordinates 
+     * @returns {SVGGraphicsElement}
+     */
     addAxisLabel(text, parent, coordinates) {
 
         const label = parent.appendChild(svg.newElement('text', {
@@ -211,24 +293,34 @@ class Axis {
         return label
     }
 
+    /**
+     * Find the interval closest to a predefined mantissa
+     * @param {number} value 
+     * @returns {Object}
+     */
     findRoundedInterval(value) {
 
         const [mantissa, exponent] = getScientific(value)
 
         const orders = [1, 2, 2.5, 5];
 
-        const order = orders[this.findNearestIndexSorted(mantissa, orders)];
+        const order = orders[this.findNearestIndex(mantissa, orders)];
 
-        const digits = order == 2.5 ? 1 : 0//exponent < 0 ? (Math.abs(exponent) + (order == 2.5 ? 1 : 0)) : 0
+        const digits = order == 2.5 ? 1 : 0
 
         return {
-            interval: order * 10 ** exponent,
+            roundedInterval: order * 10 ** exponent,
             extraDigits: digits
         }
     }
-
-    findNearestIndexSorted(value, array) {
-        //only use for small arrays!  I'm lazy
+    /**
+     * Gets the closest number in array to value
+     * @param {number} value 
+     * @param {Array<number>} array 
+     * @returns {number} 
+     */
+    findNearestIndex(value, array) {
+        //only use for small arrays!
         let difference = Math.abs(value - array[0]);
         let index = 0;
         for (let i = 1; i < array.length; i++) {
@@ -240,11 +332,11 @@ class Axis {
         }
         return index;
     }
-
-    findFirstTick(start, interval) {
-        return Math.ceil(start / interval) * interval
-    }
-
+    /**
+     * 
+     * @param {ScreenDimensions} plotDimensions 
+     * @param {Range} range 
+     */
     render(plotDimensions, range) {
         if (this.group) this.group.remove()
         this.group = this.parent.appendChild(svg.newElement('g', { id: `${this.id}` }))
