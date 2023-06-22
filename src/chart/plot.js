@@ -1,22 +1,23 @@
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
-
 class Plot {
-  constructor(parent, id, options) {
+  constructor(parent, id, options, handlers) {
     this.id = id
 
     // parent is the root svg
     this.parent = parent
+    this.handleClick = handlers.handleClick
   }
   addGroup(dimensions) {
     this.group = this.parent.appendChild(
       svg.newElement('g',
         {
           id: this.id,
-          transform: `translate(${dimensions.left},${dimensions.top})`
+          transform: `translate(${dimensions.left},${dimensions.top})`,
         }
       )
     )
+    this.group.onclick = this.handleClick
   }
   addClip(dimensions) {
     return this.group.appendChild(
@@ -43,15 +44,7 @@ class Plot {
         })
     )
   }
-  getPathString(limits, points, dimensions) {
-    console.log(points, dimensions, limits)
-    const scaledPoints = xform.transformXYObj(points,
-      limits,
-      { x: [0, dimensions.width], y: [dimensions.height, 0] }
-    )
 
-    return svg.pathStringXY((scaledPoints))
-  }
   cull(scaledPoints) {
     const acc = { x: [], y: [] }
 
@@ -68,7 +61,29 @@ class Plot {
 
     return acc;
   }
-  redraw(limits, dimensions, points) {
+  integral(limits, dimensions, points, peaks) {
+    peaks.forEach((peak) => {
+      const start = points.x.findIndex((e) => e >= peak.x[0])
+      const end = points.x.findIndex((e) => e > peak.x[1])
+      const filtered = {
+        x: [peak.x[0], ...points.x.slice(start, end + 1), peak.x[1]],
+        y: [peak.y[0], ...points.y.slice(start, end + 1), peak.y[1]]
+      }
+      const scaledPoints = xform.transformXYObj(filtered,
+        limits,
+        { x: [0, dimensions.width], y: [dimensions.height, 0] }
+      )
+      this.group.appendChild(
+        svg.newElement('path',
+          {
+            class: 'integral',
+            "clip-path": `url(#${this.id}-clip-path)`,
+            d: svg.pathStringXY(scaledPoints)
+          })
+      )
+    })
+  }
+  render(limits, dimensions, points, integrals) {
     if (this.group) this.group.remove()
 
     this.addGroup(dimensions)
@@ -77,9 +92,14 @@ class Plot {
 
     this.addOutline(dimensions)
 
+    this.integral(limits, dimensions, points, integrals)
+
     const pathElement = this.addPath()
-    const newPath = this.getPathString(limits, points, dimensions)
-    pathElement.setAttribute("d", newPath)
+    const scaledPoints = xform.transformXYObj(points,
+      limits,
+      { x: [0, dimensions.width], y: [dimensions.height, 0] }
+    )
+    pathElement.setAttribute("d", svg.pathStringXY(scaledPoints))
   }
 }
 export default Plot

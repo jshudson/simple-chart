@@ -6,54 +6,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <style>
-        svg {
-            outline: 1px solid black;
-        }
-        svg text {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 1em;
-        }
-        g {
-            outline: 1px solid green;
-        }
-        .graph {
-            height: 1000px;
-            max-height: 600px;
-            resize: both;
-            overflow: hidden;
-            outline: 1px solid orange;
-            margin-left: 100px;
-        }
-
-        path {
-            fill: none;
-            stroke: #0074d9;
-            stroke-width: 1px;
-        }
-
-        #rect {
-            fill: none;
-            stroke: blue;
-            stroke-width: 1px;
-        }
-
-        .plot0 {
-            stroke: green;
-        }
-
-        .plot1 {
-            stroke: black;
-        }
-
-        #graph {
-            outline: 1px solid green;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <script src = "./src/papaparse/papaparse.min.js"></script>
     <script src="./classTest.js" type="module" defer></script>
 </head>
 
 <body>
+    <input id="file" type="file">
     <div id="graph" class="graph">
 
     </div>

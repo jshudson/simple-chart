@@ -1,0 +1,56 @@
+:root{
+    --plot1: #0074d9;
+    --plot1Fill: color-mix(in srgb, var(--plot1) 50%, transparent)
+}
+
+svg {
+    outline: 1px solid black;
+}
+
+svg text {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1em;
+}
+
+g {
+    outline: 1px solid green;
+}
+
+.integral {
+    fill: var(--plot1Fill);
+}
+
+.graph {
+    height: 700px;
+    max-height: 1000px;
+    resize: both;
+    overflow: hidden;
+    outline: 1px solid orange;
+    margin-left: 100px;
+    width:1000px;
+}
+
+.plot {
+    fill: none;
+    stroke: #0074d9;
+    stroke-width: 2px;
+    stroke-linejoin: round;
+}
+
+#rect {
+    fill: none;
+    stroke: blue;
+    stroke-width: 1px;
+}
+
+.plot0 {
+    stroke: green;
+}
+
+.plot1 {
+    stroke: black;
+}
+
+#graph {
+    outline: 1px solid green;
+}

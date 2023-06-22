@@ -1,35 +1,8 @@
+/// <reference types="user">
 // @ts-check
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 import { getScientific, superscript } from '../utils/utils.js';
-/**
- * A two point range, low to high
- * @typedef {[number, number]} Range
- */
-
-/**
- * x y vector coordinate
- * @typedef {Object} Vector
- * @property {number} x
- * @property {number} y
- */
-
-/**
- * Defines a rectangle from an x range and y range
- * @typedef {Object} Rectangle
- * @property {Range} x The x coordinates
- * @property {Range} y The y coordinates
- */
-
-
-/**
- * Location and size of a screen element in pixels
- * @typedef {Object} ScreenDimensions
- * @property {number} left
- * @property {number} top
- * @property {number} width
- * @property {number} height
- */
 
 class Axis {
 
@@ -111,20 +84,29 @@ class Axis {
      * @param {Rectangle} axisScreenCoords
      */
     addBoundingRectangle(parent, axisScreenCoords) {
-        const dimensions = this.direction == 'x' ? parent.getBBox().height : parent.getBBox().width
-        const attributes = {}
+        const dimension = this.direction == 'x' ? parent.getBBox().height : parent.getBBox().width
+        let attributes = {}
         if (this.direction == 'x') {
-            x:axisScreenCoords.x
-            y:,
-            width:,
-            height:,
+            attributes = {
+                x: axisScreenCoords.x[0],
+                y: 0,
+                width: axisScreenCoords.x[1] - axisScreenCoords.x[0],
+                height: dimension,
+                fill: 'none'
+            }
+        } else {
+            attributes = {
+                x: -dimension,
+                y: axisScreenCoords.y[1],
+                width: dimension,
+                height: axisScreenCoords.y[0] - axisScreenCoords.y[1],
+                fill: 'none'
+            }
         }
-        this.group.appendChild(svg.newElement('rect', {
-            x:
-            y:
-            width:
-            height:
-        }))
+        const rect = parent.appendChild(svg.newElement('rect', attributes))
+        rect.onclick = () => {
+            console.log('clicked', this.direction)
+        }
     }
 
     /**
@@ -149,7 +131,7 @@ class Axis {
 
         const tickCount = Math.ceil((range[1] - firstTick) / roundedInterval)
         const tickPlotCoordinates = Array.from({ length: tickCount }, (e, i) => i * roundedInterval + firstTick)
-        
+
         const tickScreenCoordinates = xform.transform1DArray(
             tickPlotCoordinates,
             range[0], range[1],
