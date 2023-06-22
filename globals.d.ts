@@ -3,19 +3,27 @@
  * @typedef {[number, number]} Range
  */
 
-/**
- * x y vector coordinate
- * @typedef {Object} Vector
- * @property {number} x
- * @property {number} y
- */
 
 /**
- * Defines a rectangle from an x range and y range
- * @typedef {Object} Rectangle
- * @property {Range} x The x coordinates
- * @property {Range} y The y coordinates
+ * x y vector coordinate
  */
+type Vector = {
+    x: number,
+    y: number
+}
+/**
+ * Defines a rectangle from an x range and y range
+ */
+type Rectangle = {
+    /**
+     * The x start and stop
+     */
+    x: Range,
+    /**
+     * The y start and stop
+     */
+    y: Range
+}
 
 
 /**
@@ -26,3 +34,15 @@
  * @property {number} width
  * @property {number} height
  */
+
+type Range = [number, number]
+
+/**
+ * Location and size of a screen element in pixels
+ */
+type ScreenDimensions = {
+    left: number,
+    top: number,
+    width: number,
+    height: number
+}
