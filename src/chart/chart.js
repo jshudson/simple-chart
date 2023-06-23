@@ -2,6 +2,8 @@
 import * as svg from '../svgUtils/svgUtils.js'
 import Plot from './plot.js'
 import Axis from './axis.js'
+import ZoomRectangle from './zoomRectangle.js'
+
 import * as xform from './coordinateTransfer.js';
 
 const defaults = {
@@ -35,9 +37,17 @@ class Chart {
                 xmlns: 'http://www.w3.org/2000/svg'
             })
         )
+
+        this.chart.onmousedown = this.handleMouseDown.bind(this)
+        this.chart.onmousemove = this.handleMouseMove.bind(this)
+        this.chart.onmouseleave = this.handleMouseLeave.bind(this)
+        this.chart.ondblclick = this.handleDoubleClick.bind(this)
+
+        this.handleMouseUp = this.handleMouseUp.bind(this)
+
         if (options?.data) {
             this.data = { ...options.data }
-            /**@type Rect */
+            /**@type Rectangle */
             this.limits = {
                 x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
                 y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
@@ -48,11 +58,9 @@ class Chart {
             this.limits = { x: [0, 0], y: [0, 0] }
         }
 
-
-
         this.pad = {
-            top: 10,
-            right: 10,
+            top: 20,
+            right: 20,
             bottom: 10,
             left: 0,
         }
@@ -63,7 +71,6 @@ class Chart {
                 this.id,
                 'x',
                 {
-                    range: this.limits.x,
                     label: 'Time[min]',
                     format: 'standard'
                 }
@@ -73,7 +80,6 @@ class Chart {
                 this.id,
                 'y',
                 {
-                    range: this.limits.y,
                     label: 'mAU',
                     format: 'scientific'
                 }
@@ -84,14 +90,94 @@ class Chart {
             this.id + 'plot',
             {},
             {
-                handleClick: this.handleClick
+                //handleClick: this.handleClick
             }
         )
         this.integrals = []
-
+        this.zoomRectangle = new ZoomRectangle(this.chart)
         this.render()
     }
+    resetLimits() {
+        this.limits = {
+            x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
+            y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
+        }
+    }
+    handleDoubleClick(event) {
+        if (this.plot.element().contains(event.target)) {
+            this.resetLimits()
+            this.render()
+        }
+    }
+    /**
+     * 
+     * @param {PointerEvent} event 
+     */
+    handleMouseDown(event) {
+        event.preventDefault()
+        /**@type Point */
+        const point = { x: event.offsetX, y: event.offsetY }
+        if (this.plot.element().contains(event.target)) {
+            this.zoomRectangle.activate(point, this.plotDimensions)
 
+            document.addEventListener(
+                "mouseup",
+                this.handleMouseUp,
+                { once: true }
+            );
+        }
+    }
+    handleMouseMove(event) {
+        event.preventDefault()
+        /**@type Point */
+        const point = { x: event.offsetX, y: event.offsetY }
+        if (this.zoomRectangle.active) {
+            this.zoomRectangle.update(point)
+        }
+    }
+    handleMouseUp(event) {
+        event.preventDefault()
+        if (this.zoomRectangle.active) {
+            console.log(this.zoomRectangle.coordinates)
+            const zoomCoords = this.zoomRectangle.coordinates
+            if (zoomCoords.x[0] == zoomCoords.x[1] && zoomCoords.y[0] == zoomCoords.y[1]) {
+                this.zoomRectangle.deactivate()
+                return
+
+            }
+            const plotCoords = {
+                x: [
+                    zoomCoords.x[0] - this.plotDimensions.left,
+                    zoomCoords.x[1] - this.plotDimensions.left,
+                ],
+                y: [
+                    zoomCoords.y[0] - this.plotDimensions.top,
+                    zoomCoords.y[1] - this.plotDimensions.top,
+                ]
+            }
+            const newLimits = xform.transformXYObj(plotCoords,
+                { x: [0, this.plotDimensions.width], y: [this.plotDimensions.height, 0] },
+                this.limits,
+            )
+            newLimits.y = newLimits.y.toSorted((a, b) => a - b)
+            this.limits = { ...newLimits }
+            this.zoomRectangle.deactivate();
+            this.render()
+
+        }
+    }
+    handleMouseLeave(event) {
+        /**@type Point */
+        const point = { x: event.offsetX, y: event.offsetY }
+        if (this.zoomRectangle.active) {
+            this.zoomRectangle.update(point)
+            if (point.y >= event.target.getBBox().height) console.log('bottom')
+            if (point.y <= 0) console.log('top')
+            if (point.x <= 0) console.log('left')
+            if (point.x >= event.target.getBBox().width) console.log('right')
+            console.log(event.offsetY, event.target)
+        }
+    }
     /**
      * 
      * @param {PointerEvent} event 
@@ -124,6 +210,11 @@ class Chart {
         this.axes.y.render(this.plotDimensions, this.limits.y)
         console.timeEnd('render')
     }
+    /**
+     * Save the SVG Plot
+     * @param {*} svgEl 
+     * @param {*} name 
+     */
     saveSvg(svgEl, name) {
         var svgData = svgEl.outerHTML;
         var preface = '<?xml version="1.0" standalone="no"?>\r\n';
@@ -135,6 +226,13 @@ class Chart {
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
+    }
+    /**
+     * 
+     * @param {*} callback 
+     */
+    bindEvent(callback) {
+        this.chart.onclick = callback
     }
 }
 

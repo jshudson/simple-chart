@@ -83,6 +83,10 @@ class Plot {
       )
     })
   }
+  element() {
+    console.log('hi')
+    return this.group
+  }
   render(limits, dimensions, points, integrals) {
     if (this.group) this.group.remove()
 

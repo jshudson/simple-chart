@@ -31,7 +31,9 @@ const xyToObject = (data) => {
 const points = xyToObject(data);
             
 const chart = new Chart("graphtest", document.getElementById('graph'), { data: [points] })
+chart.bindEvent(()=>{console.log('ehllo')
 
+})
 // setTimeout(() => {
 //     console.log('update')
 //     chart.update()

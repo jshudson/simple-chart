@@ -190,9 +190,11 @@ function digitFromSuperscript(superChar) {
     else { return superChar; }
 }
 function charToSuperscript(number) {
+    if(number == "-") return "⁻"
+    if(number == "+") return "⁺"
     return "⁰¹²³⁴⁵⁶⁷⁸⁹"[number]
 }
 
 export const superscript = (number) => {
-    return number.toString().replace(/./g, charToSuperscript)
+    return number.toString().replace(/[0-9\-+]/g, charToSuperscript)
 }

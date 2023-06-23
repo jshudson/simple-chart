@@ -37,7 +37,7 @@ g {
     stroke-linejoin: round;
 }
 
-#rect {
+.zoom {
     fill: none;
     stroke: blue;
     stroke-width: 1px;

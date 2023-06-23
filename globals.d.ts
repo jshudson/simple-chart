@@ -1,13 +1,11 @@
 /**
  * A two point range, low to high
- * @typedef {[number, number]} Range
  */
-
-
+type NumberRange = [number, number]
 /**
  * x y vector coordinate
  */
-type Vector = {
+type Point = {
     x: number,
     y: number
 }
@@ -18,11 +16,11 @@ type Rectangle = {
     /**
      * The x start and stop
      */
-    x: Range,
+    x: NumberRange,
     /**
      * The y start and stop
      */
-    y: Range
+    y: NumberRange
 }
 
 

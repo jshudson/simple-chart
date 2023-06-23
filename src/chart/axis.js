@@ -23,7 +23,7 @@ class Axis {
     }
     /**
      * Get the margin dimensions taken up by the axis for a certain range
-     * @param {Range} range 
+     * @param {NumberRange} range 
      * @returns {number}
      */
     getDimension(range) {
@@ -40,16 +40,16 @@ class Axis {
         return this.direction == 'x' ? bBox.height : bBox.width
     }
     /**
-     * Draw an axis
+     * Draw the axis
      * @param {SVGGraphicsElement} parent 
      * @param {ScreenDimensions} plotDimensions 
-     * @param {Range} range 
+     * @param {NumberRange} range 
      */
     drawAxis(parent, plotDimensions, range) {
         /**@type {Rectangle} */
         let axisScreenCoords = { x: [0, 0], y: [0, 0] }
 
-        /**@type {Vector} */
+        /**@type {Point} */
         let offset = { x: 0, y: 0 }
 
         if (this.direction == 'x') {
@@ -112,7 +112,7 @@ class Axis {
     /**
      * Label the axis with tick marks, tick labels, and axis labels
      * @param {Rectangle} screenRange Screen coodinates for location of the axis
-     * @param {Range} range Axis limits in plot coordinates
+     * @param {NumberRange} range Axis limits in plot coordinates
      * @param {SVGGraphicsElement} parent SVG Parent
      */
     labelAxis(screenRange, range, parent) {
@@ -160,7 +160,7 @@ class Axis {
         tickPlotCoordinates.forEach((e, i) => {
             this.addTickLine(ticks, tickScreenCoordinates[i], 5)
 
-            const tickLabelText = this.getFormattedText(e, extraDigits, exponentRange)
+            const tickLabelText = this.getFormattedText(e, extraDigits, exponentRange, roundedInterval)
             const newTickLabel = this.addTickLabel(tickLabelText, ticks, tickScreenCoordinates[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
 
             //remove tick labels that overlap with axis label
@@ -175,7 +175,7 @@ class Axis {
     /**
      * 
      * @param {Array<number>} values 
-     * @returns {Range}
+     * @returns {NumberRange}
      */
     getExponentRange(values) {
         //get exponents for all values, and filter errors from 0
@@ -192,23 +192,25 @@ class Axis {
      * 
      * @param {number} value 
      * @param {number} extraDigits 
-     * @param {Range} exponentRange 
+     * @param {NumberRange} exponentRange 
+     * @param {number} interval
      * @returns 
      */
-    getFormattedText(value, extraDigits, exponentRange) {
+    getFormattedText(value, extraDigits, exponentRange, interval) {
         if (this.format == 'scientific') {
             return this.getScientificText(value, extraDigits, exponentRange)
         }
         //min and max exponent define how many decimals are displayed
-        const absMax = Math.max(Math.abs(exponentRange[0]), Math.abs(exponentRange[1]))
-        const digits = (exponentRange[0] || exponentRange[1]) < 0 ? absMax + extraDigits : 0
+        const [, exponent] = getScientific(interval)
+        console.log(value, extraDigits, interval, exponent)
+        const digits = Math.abs(exponent) + extraDigits
         return value.toFixed(digits)
     }
     /**
      * 
      * @param {number} value 
      * @param {number} extraDigits 
-     * @param {Range} exponentRange
+     * @param {NumberRange} exponentRange
      * @returns 
      */
     getScientificText(value, extraDigits, exponentRange) {
@@ -260,7 +262,7 @@ class Axis {
      * Add an axis label and return a reference
      * @param {String} text 
      * @param {SVGGraphicsElement} parent 
-     * @param {Vector} coordinates 
+     * @param {Point} coordinates 
      * @returns {SVGGraphicsElement}
      */
     addAxisLabel(text, parent, coordinates) {
@@ -317,7 +319,7 @@ class Axis {
     /**
      * 
      * @param {ScreenDimensions} plotDimensions 
-     * @param {Range} range 
+     * @param {NumberRange} range 
      */
     render(plotDimensions, range) {
         if (this.group) this.group.remove()
