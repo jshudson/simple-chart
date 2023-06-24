@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 function charToSuperscript(number) {
   return result = "⁰¹²³⁴⁵⁶⁷⁸⁹"[number]
 }

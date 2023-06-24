@@ -19,10 +19,10 @@ export function transform1DArray(points, sourceA, sourceB, targetA, targetB) {
  * @param {Object} points - collection of xy data
  * @param {number[]} points.x - list of x values
  * @param {number[]} points.y - list of y values
- * @param {Object} sourceRect 
+ * @param {Object} sourceRect
  * @param {number[]} sourceRect.x
  * @param {number[]} sourceRect.y
- * @param {Object} targetRect 
+ * @param {Object} targetRect
  * @param {number[]} targetRect.x
  * @param {number[]} targetRect.y
  * @returns {Object} - collection of xy data

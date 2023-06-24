@@ -11,7 +11,7 @@ class Axis {
      * @param {SVGGraphicsElement} parent Root of chart
      * @param {String} id Id from the parent
      * @param {String} direction Axis direction 'x' or 'y'
-     * @param {Object} options 
+     * @param {Object} options
      */
     constructor(parent, id, direction, options) {
         this.parent = parent;
@@ -23,7 +23,7 @@ class Axis {
     }
     /**
      * Get the margin dimensions taken up by the axis for a certain range
-     * @param {NumberRange} range 
+     * @param {NumberRange} range
      * @returns {number}
      */
     getDimension(range) {
@@ -41,9 +41,9 @@ class Axis {
     }
     /**
      * Draw the axis
-     * @param {SVGGraphicsElement} parent 
-     * @param {ScreenDimensions} plotDimensions 
-     * @param {NumberRange} range 
+     * @param {SVGGraphicsElement} parent
+     * @param {ScreenDimensions} plotDimensions
+     * @param {NumberRange} range
      */
     drawAxis(parent, plotDimensions, range) {
         /**@type {Rectangle} */
@@ -79,8 +79,8 @@ class Axis {
 
     }
     /**
-     * 
-     * @param {SVGGraphicsElement} parent 
+     *
+     * @param {SVGGraphicsElement} parent
      * @param {Rectangle} axisScreenCoords
      */
     addBoundingRectangle(parent, axisScreenCoords) {
@@ -173,8 +173,8 @@ class Axis {
         })
     }
     /**
-     * 
-     * @param {Array<number>} values 
+     *
+     * @param {Array<number>} values
      * @returns {NumberRange}
      */
     getExponentRange(values) {
@@ -189,12 +189,12 @@ class Axis {
         return [minExponent, maxExponent]
     }
     /**
-     * 
-     * @param {number} value 
-     * @param {number} extraDigits 
-     * @param {NumberRange} exponentRange 
+     *
+     * @param {number} value
+     * @param {number} extraDigits
+     * @param {NumberRange} exponentRange
      * @param {number} interval
-     * @returns 
+     * @returns
      */
     getFormattedText(value, extraDigits, exponentRange, interval) {
         if (this.format == 'scientific') {
@@ -202,16 +202,16 @@ class Axis {
         }
         //min and max exponent define how many decimals are displayed
         const [, exponent] = getScientific(interval)
-        console.log(value, extraDigits, interval, exponent)
+
         const digits = Math.abs(exponent) + extraDigits
         return value.toFixed(digits)
     }
     /**
-     * 
-     * @param {number} value 
-     * @param {number} extraDigits 
+     *
+     * @param {number} value
+     * @param {number} extraDigits
      * @param {NumberRange} exponentRange
-     * @returns 
+     * @returns
      */
     getScientificText(value, extraDigits, exponentRange) {
         const divisor = 10 ** exponentRange[1]
@@ -260,9 +260,9 @@ class Axis {
     }
     /**
      * Add an axis label and return a reference
-     * @param {String} text 
-     * @param {SVGGraphicsElement} parent 
-     * @param {Point} coordinates 
+     * @param {String} text
+     * @param {SVGGraphicsElement} parent
+     * @param {Point} coordinates
      * @returns {SVGGraphicsElement}
      */
     addAxisLabel(text, parent, coordinates) {
@@ -279,7 +279,7 @@ class Axis {
 
     /**
      * Find the interval closest to a predefined mantissa
-     * @param {number} value 
+     * @param {number} value
      * @returns {Object}
      */
     findRoundedInterval(value) {
@@ -299,9 +299,9 @@ class Axis {
     }
     /**
      * Gets the closest number in array to value
-     * @param {number} value 
-     * @param {Array<number>} array 
-     * @returns {number} 
+     * @param {number} value
+     * @param {Array<number>} array
+     * @returns {number}
      */
     findNearestIndex(value, array) {
         //only use for small arrays!
@@ -317,9 +317,9 @@ class Axis {
         return index;
     }
     /**
-     * 
-     * @param {ScreenDimensions} plotDimensions 
-     * @param {NumberRange} range 
+     *
+     * @param {ScreenDimensions} plotDimensions
+     * @param {NumberRange} range
      */
     render(plotDimensions, range) {
         if (this.group) this.group.remove()

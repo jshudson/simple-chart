@@ -22,7 +22,7 @@ export function append(parent, type, attributes) {
  */
 export function pathStringXY(points) {
     let path = `M${points.x[0]},${points.y[0]}`;
-    for (let i = 0; i < points.x.length; i++) {
+    for (let i = 1; i < points.x.length; i++) {
         path += `L${points.x[i]},${points.y[i]}`;
     }
     return path
