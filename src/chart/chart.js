@@ -1,4 +1,4 @@
-// @ts-check
+
 import * as svg from '../svgUtils/svgUtils.js'
 import Plot from './plot.js'
 import Axis from './axis.js'
@@ -14,10 +14,10 @@ const defaults = {
 
 class Chart {
     /**
-     * 
-     * @param {String} id 
-     * @param {HTMLElement} parent 
-     * @param {Object} options 
+     *
+     * @param {String} id
+     * @param {HTMLElement} parent
+     * @param {Object} options
      */
     constructor(id, parent, options) {
         this.handleClick = this.handleClick.bind(this)
@@ -42,6 +42,8 @@ class Chart {
         this.chart.onmousemove = this.handleMouseMove.bind(this)
         this.chart.onmouseleave = this.handleMouseLeave.bind(this)
         this.chart.ondblclick = this.handleDoubleClick.bind(this)
+        this.chart.onwheel = this.handleWheel.bind(this)
+
 
         this.handleMouseUp = this.handleMouseUp.bind(this)
 
@@ -110,8 +112,8 @@ class Chart {
         }
     }
     /**
-     * 
-     * @param {PointerEvent} event 
+     *
+     * @param {PointerEvent} event
      */
     handleMouseDown(event) {
         event.preventDefault()
@@ -178,9 +180,16 @@ class Chart {
             console.log(event.offsetY, event.target)
         }
     }
+    handleWheel(event){
+        console.log('scrolling')
+        if(this.axes.x.boundary.contains(event.target)){
+            event.preventDefault()
+            console.log('x axis scroll',event)
+        }
+    }
     /**
-     * 
-     * @param {PointerEvent} event 
+     *
+     * @param {PointerEvent} event
      */
     handleClick(event) {
         console.log(this)
@@ -212,8 +221,8 @@ class Chart {
     }
     /**
      * Save the SVG Plot
-     * @param {*} svgEl 
-     * @param {*} name 
+     * @param {*} svgEl
+     * @param {*} name
      */
     saveSvg(svgEl, name) {
         var svgData = svgEl.outerHTML;
@@ -228,8 +237,8 @@ class Chart {
         document.body.removeChild(downloadLink);
     }
     /**
-     * 
-     * @param {*} callback 
+     *
+     * @param {*} callback
      */
     bindEvent(callback) {
         this.chart.onclick = callback

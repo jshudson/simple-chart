@@ -103,10 +103,17 @@ class Axis {
                 fill: 'none'
             }
         }
-        const rect = parent.appendChild(svg.newElement('rect', attributes))
-        rect.onclick = () => {
+        this.rect = parent.appendChild(svg.newElement('rect', attributes))
+        this.rect.onclick = () => {
             console.log('clicked', this.direction)
         }
+    }
+    /**
+     * Get the bounding rectangle for the axis
+     * @returns {SVGElement}
+     */
+    get boundary() {
+        return this.rect
     }
 
     /**
