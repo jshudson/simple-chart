@@ -6,11 +6,13 @@ import ZoomRectangle from './zoomRectangle.js'
 
 import * as xform from './coordinateTransfer.js';
 
-const defaults = {
+const DEFAULT_OPTIONS = {
     data: { x: [], y: [] },
     limits: { x: [0, 0], y: [] },
     pad: { top: 10, right: 10, bottom: 10, left: 0 }
 }
+
+const ZOOM_FACTOR = 1.5
 
 class Chart {
     /**
@@ -43,7 +45,6 @@ class Chart {
         this.chart.onmouseleave = this.handleMouseLeave.bind(this)
         this.chart.ondblclick = this.handleDoubleClick.bind(this)
         this.chart.onwheel = this.handleWheel.bind(this)
-
 
         this.handleMouseUp = this.handleMouseUp.bind(this)
 
@@ -90,14 +91,14 @@ class Chart {
         this.plot = new Plot(
             this.chart,
             this.id + 'plot',
-            {},
-            {
-                //handleClick: this.handleClick
-            }
         )
         this.integrals = []
         this.zoomRectangle = new ZoomRectangle(this.chart)
-        this.render()
+        this.render();
+        this.interactionMode = 'zoom';
+    }
+    setMode(mode) {
+        this.interactionMode = mode
     }
     resetLimits() {
         this.limits = {
@@ -106,10 +107,8 @@ class Chart {
         }
     }
     handleDoubleClick(event) {
-        if (this.plot.element().contains(event.target)) {
-            this.resetLimits()
-            this.render()
-        }
+        this.resetLimits()
+        this.render()
     }
     /**
      *
@@ -117,6 +116,27 @@ class Chart {
      */
     handleMouseDown(event) {
         event.preventDefault()
+        //@ts-ignore
+        if (this.axes.x.boundary.contains(event.target)) { this.handleMouseDown_Axis(event, 'x') }
+        switch (this.interactionMode) {
+            case 'zoom':
+                this.handleMouseDown_Zoom(event)
+                return;
+            case 'integrate':
+                this.handleMouseDown_Integrate(event)
+                return;
+            default:
+                return;
+        }
+    }
+    handleMouseDown_Axis(event, direction) {
+        console.log(this.getMouseEventAxisCoordinate1D(event))
+    }
+    /**
+     * 
+     * @param {PointerEvent} event 
+     */
+    handleMouseDown_Zoom(event) {
         /**@type Point */
         const point = { x: event.offsetX, y: event.offsetY }
         if (this.plot.element().contains(event.target)) {
@@ -124,13 +144,37 @@ class Chart {
 
             document.addEventListener(
                 "mouseup",
-                this.handleMouseUp,
+                this.handleMouseUp_Zoom.bind(this),
                 { once: true }
             );
         }
     }
+    handleMouseDown_Integrate(event) {
+        console.log(this)
+        console.log(event)
+        console.log(event.offsetX, event.offsetY);
+        const click = xform.transform2D(
+            { x: event.offsetX - this.plotDimensions.left, y: event.offsetY - this.plotDimensions.top },
+            { x: [0, this.plotDimensions.width], y: [this.plotDimensions.height, 0] },
+            this.limits
+        )
+        this.integrals.push({ x: [click.x, click.x + 0.5], y: [click.y, click.y + 1] })
+        this.render()
+    }
     handleMouseMove(event) {
         event.preventDefault()
+        switch (this.interactionMode) {
+            case 'zoom':
+                this.handleMouseMove_Zoom(event)
+                return;
+            case 'integrate':
+                //this.handleMouseDown_Integrate(event)
+                return;
+            default:
+                return;
+        }
+    }
+    handleMouseMove_Zoom(event) {
         /**@type Point */
         const point = { x: event.offsetX, y: event.offsetY }
         if (this.zoomRectangle.active) {
@@ -139,15 +183,16 @@ class Chart {
     }
     handleMouseUp(event) {
         event.preventDefault()
+    }
+    handleMouseUp_Zoom() {
         if (this.zoomRectangle.active) {
-            console.log(this.zoomRectangle.coordinates)
             const zoomCoords = this.zoomRectangle.coordinates
             if (zoomCoords.x[0] == zoomCoords.x[1] && zoomCoords.y[0] == zoomCoords.y[1]) {
                 this.zoomRectangle.deactivate()
                 return
 
             }
-            const plotCoords = {
+            const rectPlotCoords = {
                 x: [
                     zoomCoords.x[0] - this.plotDimensions.left,
                     zoomCoords.x[1] - this.plotDimensions.left,
@@ -157,7 +202,7 @@ class Chart {
                     zoomCoords.y[1] - this.plotDimensions.top,
                 ]
             }
-            const newLimits = xform.transformXYObj(plotCoords,
+            const newLimits = xform.transformXYObj(rectPlotCoords,
                 { x: [0, this.plotDimensions.width], y: [this.plotDimensions.height, 0] },
                 this.limits,
             )
@@ -165,45 +210,121 @@ class Chart {
             this.limits = { ...newLimits }
             this.zoomRectangle.deactivate();
             this.render()
+        }
 
+    }
+    /**
+     * 
+     * @param {PointerEvent} event 
+     */
+    handleMouseLeave(event) {
+        switch (this.interactionMode) {
+            case 'zoom':
+                this.handleMouseLeave_Zoom(event)
+                return;
+            case 'integrate':
+                //this.handleMouseDown_Integrate(event)
+                return;
+            default:
+                return;
         }
     }
-    handleMouseLeave(event) {
+    /**
+     * 
+     * @param {PointerEvent} event 
+     */
+    handleMouseLeave_Zoom(event) {
         /**@type Point */
         const point = { x: event.offsetX, y: event.offsetY }
         if (this.zoomRectangle.active) {
             this.zoomRectangle.update(point)
-            if (point.y >= event.target.getBBox().height) console.log('bottom')
-            if (point.y <= 0) console.log('top')
-            if (point.x <= 0) console.log('left')
-            if (point.x >= event.target.getBBox().width) console.log('right')
-            console.log(event.offsetY, event.target)
         }
     }
-    handleWheel(event){
-        console.log('scrolling')
-        if(this.axes.x.boundary.contains(event.target)){
-            event.preventDefault()
-            console.log('x axis scroll',event)
+    handleWheel(event) {
+        event.preventDefault()
+        this.handleWheel_Axis(event)
+    }
+    /**
+     * 
+     * @param {PointerEvent} event
+     * @returns {Object}
+     */
+    getMouseEventAxisCoordinate1D(event) {
+        let axis = ''
+        //@ts-ignore
+        if (this.axes.x.boundary.contains(event.target)) { axis = 'x' }
+        //@ts-ignore
+        if (this.axes.y.boundary.contains(event.target)) { axis = 'y' }
+        if (!axis) return undefined
+
+        const offsetPlotCoords = {
+            x: event.offsetX - this.plotDimensions.left,
+            y: event.offsetY - this.plotDimensions.top,
         }
+
+        const source = []
+        if (axis == 'x') {
+            source[0] = 0
+            source[1] = this.plotDimensions.width
+        }
+        if (axis == 'y') {
+            source[0] = this.plotDimensions.height
+            source[1] = 0
+        }
+
+        return {
+            axis,
+            coordinate: xform.transform1D(offsetPlotCoords[axis], source[0], source[1], this.limits[axis][0], this.limits[axis][1])
+        }
+    }
+    getMouseEventPlotCoorinate(event){
+        const offsetPlotCoords = {
+            x: event.offsetX - this.plotDimensions.left,
+            y: event.offsetY - this.plotDimensions.top,
+        }
+
+        const source = []
+        if (axis == 'x') {
+            source[0] = 0
+            source[1] = this.plotDimensions.width
+        }
+        if (axis == 'y') {
+            source[0] = this.plotDimensions.height
+            source[1] = 0
+        }
+
+        return {
+            axis,
+            coordinate: xform.transform1D(offsetPlotCoords[axis], source[0], source[1], this.limits[axis][0], this.limits[axis][1])
+        }
+    }
+    handleWheel_Axis(event) {
+
+        const scrollDirection = Math.sign(event.deltaY)
+
+        const axisPlotCoord = this.getMouseEventAxisCoordinate1D(event)
+        if(!(axisPlotCoord?.axis)) return
+        console.log('past')
+        const scrollFactor = scrollDirection < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR
+
+        const newCoords = [
+            (this.limits[axisPlotCoord.axis][0] - axisPlotCoord.coordinate * (1 - scrollFactor)) / scrollFactor,
+            (this.limits[axisPlotCoord.axis][1] - axisPlotCoord.coordinate * (1 - scrollFactor)) / scrollFactor
+        ]
+        this.limits[axisPlotCoord.axis] = [...newCoords]
+        this.render()
     }
     /**
      *
      * @param {PointerEvent} event
      */
     handleClick(event) {
-        console.log(this)
-        console.log(event)
-        console.log(event.offsetX, event.offsetY);
-        const click = xform.transform2D(
-            { x: event.offsetX - this.plotDimensions.left, y: event.offsetY - this.plotDimensions.top },
-            { x: [0, this.plotDimensions.width], y: [this.plotDimensions.height, 0] },
-            this.limits
-        )
-        console.log(click)
-        this.integrals.push({ x: [click.x, click.x + 0.5], y: [click.y, click.y + 1] })
-        this.render()
+
     }
+
+    /**
+     * Render the Chart
+     */
     render() {
         console.time('render')
         const xAxisPad = this.axes.x.getDimension(this.limits.x)

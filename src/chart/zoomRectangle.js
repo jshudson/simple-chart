@@ -30,7 +30,6 @@ export default class ZoomRectangle {
      * @param {Point} point 
      */
     activate(point, plotDimensions) {
-        console.log(plotDimensions)
         this.rectLimits = { ...plotDimensions }
         this.enabled = true;
         this.firstPoint = { ...point }

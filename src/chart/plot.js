@@ -1,12 +1,11 @@
 import * as svg from '../svgUtils/svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 class Plot {
-  constructor(parent, id, options, handlers) {
+  constructor(parent, id, options) {
     this.id = id
 
     // parent is the root svg
     this.parent = parent
-    this.handleClick = handlers.handleClick
   }
   addGroup(dimensions) {
     this.group = this.parent.appendChild(
@@ -17,7 +16,6 @@ class Plot {
         }
       )
     )
-    this.group.onclick = this.handleClick
   }
   addClip(dimensions) {
     return this.group.appendChild(
@@ -84,7 +82,6 @@ class Plot {
     })
   }
   element() {
-    console.log('hi')
     return this.group
   }
   render(limits, dimensions, points, integrals) {

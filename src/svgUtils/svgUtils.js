@@ -16,8 +16,7 @@ export function append(parent, type, attributes) {
 
 /**
  * Get a path string for an x y list object
- * @param {number[]} points.x
- * @param {number[]} points.y
+ * @param {XYData} points
  * @returns {string} SVG Path String
  */
 export function pathStringXY(points) {
@@ -30,10 +29,9 @@ export function pathStringXY(points) {
 
 /**
  * Get and SVG Path Element based on an x y list object.  Additional attributes can be added with an attribute object.
- * @param {number[]} points.x
- * @param {number[]} points.y
+ * @param {XYData} points
  * @param {Object} attributes
- * @returns {element} SVG Path Element
+ * @returns {SVGPathElement} SVG Path Element
  */
 
 export function pathXY(points, attributes) {
@@ -41,7 +39,7 @@ export function pathXY(points, attributes) {
         ...attributes,
         d: pathStringXY(points)
     }
-    const element = newElement('path', combinedAttributes, SVGNS)
+    const element = newElement('path', combinedAttributes)
     return element;
 }
 
@@ -52,7 +50,7 @@ export function pathXY(points, attributes) {
  * @param {number} width
  * @param {number} height
  * @param {Object} attributes
- * @returns
+ * @returns {SVGRectElement}
  */
 
 export function rect(x, y, width, height, attributes) {
@@ -63,10 +61,19 @@ export function rect(x, y, width, height, attributes) {
         width,
         height
     }
-    const element = newElement('rect', combinedAttributes, SVGNS)
+    const element = newElement('rect', combinedAttributes)
     return element;
 }
 
+/**
+ * 
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} width 
+ * @param {*} height 
+ * @param {*} attributes 
+ * @returns {SVGClipPathElement}
+ */
 export function clipRect(x, y, width, height, attributes) {
 
     const clip = newElement('clipPath', attributes)

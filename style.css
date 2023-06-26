@@ -1,4 +1,4 @@
-:root{
+:root {
     --plot1: #0074d9;
     --plot1Fill: color-mix(in srgb, var(--plot1) 50%, transparent)
 }
@@ -12,9 +12,9 @@ svg text {
     font-size: 1em;
 }
 
-g {
+/* g {
     outline: 1px solid green;
-}
+} */
 
 .integral {
     fill: var(--plot1Fill);
@@ -27,7 +27,7 @@ g {
     overflow: hidden;
     outline: 1px solid orange;
     margin-left: 100px;
-    width:1000px;
+    width: 1000px;
 }
 
 .plot {
@@ -51,6 +51,13 @@ g {
     stroke: black;
 }
 
-#graph {
+/* #graph {
     outline: 1px solid green;
+} */
+
+.scroll-drag-horiz:hover {
+    cursor: url("./assets/cursors/grab-scroll-horiz.svg") 16 16, pointer;
+}
+.scroll-drag-vert:hover {
+    cursor: url("./assets/cursors/grab-scroll-vert.svg") 16 16, pointer;
 }

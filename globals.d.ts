@@ -9,6 +9,12 @@ type Point = {
     x: number,
     y: number
 }
+
+type XYData = {
+    x: number[],
+    y: number[]
+}
+
 /**
  * Defines a rectangle from an x range and y range
  */

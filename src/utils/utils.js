@@ -1,3 +1,5 @@
+// @ts-ignore
+
 //Copied from LoDash
 
 /**

@@ -85,28 +85,27 @@ class Axis {
      */
     addBoundingRectangle(parent, axisScreenCoords) {
         const dimension = this.direction == 'x' ? parent.getBBox().height : parent.getBBox().width
-        let attributes = {}
+        let attributes = {fill:'none'}
         if (this.direction == 'x') {
             attributes = {
+                ...attributes,
                 x: axisScreenCoords.x[0],
                 y: 0,
                 width: axisScreenCoords.x[1] - axisScreenCoords.x[0],
                 height: dimension,
-                fill: 'none'
+                class:'scroll-drag-horiz'
             }
         } else {
             attributes = {
+                ...attributes,
                 x: -dimension,
                 y: axisScreenCoords.y[1],
                 width: dimension,
                 height: axisScreenCoords.y[0] - axisScreenCoords.y[1],
-                fill: 'none'
+                class:'scroll-drag-vert'
             }
         }
         this.rect = parent.appendChild(svg.newElement('rect', attributes))
-        this.rect.onclick = () => {
-            console.log('clicked', this.direction)
-        }
     }
     /**
      * Get the bounding rectangle for the axis
@@ -145,7 +144,7 @@ class Axis {
             screenRange[this.direction][0], screenRange[this.direction][1]
         )
 
-        const exponentRange = this.getExponentRange(tickPlotCoordinates)
+        const exponentRange = this.getExponentRange([...tickPlotCoordinates, roundedInterval])
 
         const axisLabelGroup = parent.appendChild(svg.newElement('g', {}))
         const axisLabel = this.addAxisLabel(this.label, axisLabelGroup, {
