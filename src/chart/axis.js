@@ -23,17 +23,14 @@ class Axis {
     }
     /**
      * Get the margin dimensions taken up by the axis for a certain range
+     * @param {ScreenDimensions} plotDimensions
      * @param {NumberRange} range
      * @returns {number}
      */
-    getDimension(range) {
-        const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden' }))
-        this.drawAxis(temp, {
-            top: 0,
-            left: 0,
-            width: 100,
-            height: 100
-        }, range)
+    getDimension(plotDimensions, range) {
+        console.log('get dimension range' + this.direction, range)
+        const temp = this.parent.appendChild(svg.newElement('g', { visibility: 'hidden', id: `${this.direction}${range[0]}-${range[1]}` }))
+        this.drawAxis(temp, plotDimensions, range)
         const bBox = temp.getBBox()
         temp.remove()
 
@@ -46,6 +43,7 @@ class Axis {
      * @param {NumberRange} range
      */
     drawAxis(parent, plotDimensions, range) {
+        console.log('draw range' + this.direction, range)
         /**@type {Rectangle} */
         let axisScreenCoords = { x: [0, 0], y: [0, 0] }
 
@@ -85,7 +83,7 @@ class Axis {
      */
     addBoundingRectangle(parent, axisScreenCoords) {
         const dimension = this.direction == 'x' ? parent.getBBox().height : parent.getBBox().width
-        let attributes = {fill:'none'}
+        let attributes = { fill: 'none' }
         if (this.direction == 'x') {
             attributes = {
                 ...attributes,
@@ -93,7 +91,7 @@ class Axis {
                 y: 0,
                 width: axisScreenCoords.x[1] - axisScreenCoords.x[0],
                 height: dimension,
-                class:'scroll-drag-horiz'
+                class: 'scroll-drag-horiz'
             }
         } else {
             attributes = {
@@ -102,7 +100,7 @@ class Axis {
                 y: axisScreenCoords.y[1],
                 width: dimension,
                 height: axisScreenCoords.y[0] - axisScreenCoords.y[1],
-                class:'scroll-drag-vert'
+                class: 'scroll-drag-vert'
             }
         }
         this.rect = parent.appendChild(svg.newElement('rect', attributes))
@@ -136,6 +134,7 @@ class Axis {
         const firstTick = Math.ceil(range[0] / roundedInterval) * roundedInterval
 
         const tickCount = Math.ceil((range[1] - firstTick) / roundedInterval)
+        console.log(this.direction, firstTick)
         const tickPlotCoordinates = Array.from({ length: tickCount }, (e, i) => i * roundedInterval + firstTick)
 
         const tickScreenCoordinates = xform.transform1DArray(
@@ -162,20 +161,29 @@ class Axis {
         const axisLabelBox = axisLabelGroup.getBBox()
 
         const ticks = parent.appendChild(svg.newElement('g', {}))
+        
+        let prevTickLabelBox
 
         tickPlotCoordinates.forEach((e, i) => {
             this.addTickLine(ticks, tickScreenCoordinates[i], 5)
 
             const tickLabelText = this.getFormattedText(e, extraDigits, exponentRange, roundedInterval)
             const newTickLabel = this.addTickLabel(tickLabelText, ticks, tickScreenCoordinates[i], screenRange[this.direction == 'x' ? 'y' : 'x'][1])
-
-            //remove tick labels that overlap with axis label
+            //remove tick labels that overlap with stuff
             const tickLabelBox = newTickLabel.getBBox();
+            
             if (this.direction == 'x') {
-                if (tickLabelBox.x + tickLabelBox.width >= axisLabelBox.x) newTickLabel.remove()
+                if (tickLabelBox.x + tickLabelBox.width >= axisLabelBox.x || tickLabelBox.x <= prevTickLabelBox?.x + prevTickLabelBox?.width) {
+                    newTickLabel.remove()
+                    return
+                }
             } else {
-                if (tickLabelBox.y <= axisLabelBox.y + axisLabelBox.height) newTickLabel.remove()
+                if (tickLabelBox.y <= axisLabelBox.y + axisLabelBox.height || tickLabelBox.y >= prevTickLabelBox?.y + prevTickLabelBox?.height) {
+                    newTickLabel.remove()
+                    return
+                }
             }
+            prevTickLabelBox = newTickLabel.getBBox()
         })
     }
     /**

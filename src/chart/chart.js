@@ -3,6 +3,7 @@ import * as svg from '../svgUtils/svgUtils.js'
 import Plot from './plot.js'
 import Axis from './axis.js'
 import ZoomRectangle from './zoomRectangle.js'
+import { getScientific } from '../utils/utils.js';
 
 import * as xform from './coordinateTransfer.js';
 
@@ -67,7 +68,12 @@ class Chart {
             bottom: 10,
             left: 0,
         }
-
+        this.plotDimensions = {
+            top: this.pad.top,
+            left: this.pad.left,
+            width: this.width - this.pad.left - this.pad.right,
+            height: this.height - this.pad.top - this.pad.bottom
+        }
         this.axes = {
             x: new Axis(
                 this.chart,
@@ -101,14 +107,30 @@ class Chart {
         this.interactionMode = mode
     }
     resetLimits() {
+        this.setLimits(
+            {
+                x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
+                y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
+            }
+        )
+    }
+    /**
+     * 
+     * @param {Rectangle} newLimits 
+     * @returns 
+     */
+    setLimits(newLimits) {
+        const [, xExponent] = getScientific(newLimits.y[1] - newLimits.y[0])
+        const [, yExponent] = getScientific(newLimits.y[1] - newLimits.y[0])
+        if (xExponent < -10 || yExponent < -10) return
         this.limits = {
-            x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
-            y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)]
+            x: [...newLimits.x],
+            y: [...newLimits.y]
         }
+        this.render()
     }
     handleDoubleClick(event) {
         this.resetLimits()
-        this.render()
     }
     /**
      *
@@ -117,7 +139,8 @@ class Chart {
     handleMouseDown(event) {
         event.preventDefault()
         //@ts-ignore
-        if (this.axes.x.boundary.contains(event.target)) { this.handleMouseDown_Axis(event, 'x') }
+        const onAxis = this.eventOnAxis(event)
+        if (onAxis) this.handleMouseDown_Axis(event, onAxis)
         switch (this.interactionMode) {
             case 'zoom':
                 this.handleMouseDown_Zoom(event)
@@ -129,8 +152,8 @@ class Chart {
                 return;
         }
     }
-    handleMouseDown_Axis(event, direction) {
-        console.log(this.getMouseEventAxisCoordinate1D(event))
+    handleMouseDown_Axis(event, axis) {
+        console.log(axis)
     }
     /**
      * 
@@ -150,9 +173,7 @@ class Chart {
         }
     }
     handleMouseDown_Integrate(event) {
-        console.log(this)
-        console.log(event)
-        console.log(event.offsetX, event.offsetY);
+
         const click = xform.transform2D(
             { x: event.offsetX - this.plotDimensions.left, y: event.offsetY - this.plotDimensions.top },
             { x: [0, this.plotDimensions.width], y: [this.plotDimensions.height, 0] },
@@ -163,6 +184,7 @@ class Chart {
     }
     handleMouseMove(event) {
         event.preventDefault()
+
         switch (this.interactionMode) {
             case 'zoom':
                 this.handleMouseMove_Zoom(event)
@@ -186,11 +208,11 @@ class Chart {
     }
     handleMouseUp_Zoom() {
         if (this.zoomRectangle.active) {
+            console.log(this.zoomRectangle.coordinates)
             const zoomCoords = this.zoomRectangle.coordinates
-            if (zoomCoords.x[0] == zoomCoords.x[1] && zoomCoords.y[0] == zoomCoords.y[1]) {
+            if (zoomCoords.x[1] - zoomCoords.x[0] <= 1 || zoomCoords.y[1] - zoomCoords.y[0] <= 1) {
                 this.zoomRectangle.deactivate()
                 return
-
             }
             const rectPlotCoords = {
                 x: [
@@ -207,9 +229,9 @@ class Chart {
                 this.limits,
             )
             newLimits.y = newLimits.y.toSorted((a, b) => a - b)
-            this.limits = { ...newLimits }
             this.zoomRectangle.deactivate();
-            this.render()
+            this.setLimits(newLimits)
+
         }
 
     }
@@ -242,76 +264,48 @@ class Chart {
     }
     handleWheel(event) {
         event.preventDefault()
-        this.handleWheel_Axis(event)
+        const onAxis = this.eventOnAxis(event)
+        if (onAxis) this.handleWheel_Axis(event, onAxis)
     }
+    eventOnAxis(event) {
+        if (this.axes.x.boundary.contains(event.target)) return 'x'
+        if (this.axes.y.boundary.contains(event.target)) return 'y'
+        return undefined
+    }
+
     /**
-     * 
-     * @param {PointerEvent} event
-     * @returns {Object}
+     * Convert a coordinate in the chart area to a Plot Scaled value
+     * @param {Point} point xy coordinates based on the total chart size
+     * @returns {Point}
      */
-    getMouseEventAxisCoordinate1D(event) {
-        let axis = ''
-        //@ts-ignore
-        if (this.axes.x.boundary.contains(event.target)) { axis = 'x' }
-        //@ts-ignore
-        if (this.axes.y.boundary.contains(event.target)) { axis = 'y' }
-        if (!axis) return undefined
-
+    chartScreenCoordinateToPlotCoordinate(point) {
         const offsetPlotCoords = {
-            x: event.offsetX - this.plotDimensions.left,
-            y: event.offsetY - this.plotDimensions.top,
+            x: point.x - this.plotDimensions.left,
+            y: point.y - this.plotDimensions.top,
         }
 
-        const source = []
-        if (axis == 'x') {
-            source[0] = 0
-            source[1] = this.plotDimensions.width
-        }
-        if (axis == 'y') {
-            source[0] = this.plotDimensions.height
-            source[1] = 0
+        const source = {
+            x: [0, this.plotDimensions.width],
+            y: [this.plotDimensions.height, 0]
         }
 
-        return {
-            axis,
-            coordinate: xform.transform1D(offsetPlotCoords[axis], source[0], source[1], this.limits[axis][0], this.limits[axis][1])
-        }
+        return xform.transform2D(offsetPlotCoords, source, this.limits)
     }
-    getMouseEventPlotCoorinate(event){
-        const offsetPlotCoords = {
-            x: event.offsetX - this.plotDimensions.left,
-            y: event.offsetY - this.plotDimensions.top,
-        }
+    plotCoordinateToScreenCoordinate(point) {
 
-        const source = []
-        if (axis == 'x') {
-            source[0] = 0
-            source[1] = this.plotDimensions.width
-        }
-        if (axis == 'y') {
-            source[0] = this.plotDimensions.height
-            source[1] = 0
-        }
-
-        return {
-            axis,
-            coordinate: xform.transform1D(offsetPlotCoords[axis], source[0], source[1], this.limits[axis][0], this.limits[axis][1])
-        }
     }
-    handleWheel_Axis(event) {
+    handleWheel_Axis(event, axis) {
 
         const scrollDirection = Math.sign(event.deltaY)
-
-        const axisPlotCoord = this.getMouseEventAxisCoordinate1D(event)
-        if(!(axisPlotCoord?.axis)) return
-        console.log('past')
+        const axisPlotCoord = this.chartScreenCoordinateToPlotCoordinate({ x: event.offsetX, y: event.offsetY })[axis]
         const scrollFactor = scrollDirection < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR
-
         const newCoords = [
-            (this.limits[axisPlotCoord.axis][0] - axisPlotCoord.coordinate * (1 - scrollFactor)) / scrollFactor,
-            (this.limits[axisPlotCoord.axis][1] - axisPlotCoord.coordinate * (1 - scrollFactor)) / scrollFactor
+            (this.limits[axis][0] - axisPlotCoord * (1 - scrollFactor)) / scrollFactor,
+            (this.limits[axis][1] - axisPlotCoord * (1 - scrollFactor)) / scrollFactor
         ]
-        this.limits[axisPlotCoord.axis] = [...newCoords]
+        const [, exponent] = getScientific(newCoords[1] - newCoords[0])
+        if (exponent < -10) return
+        this.limits[axis] = [...newCoords]
         this.render()
     }
     /**
@@ -327,8 +321,9 @@ class Chart {
      */
     render() {
         console.time('render')
-        const xAxisPad = this.axes.x.getDimension(this.limits.x)
-        const yAxisPad = this.axes.y.getDimension(this.limits.y)
+        const xAxisPad = this.axes.x.getDimension(this.plotDimensions, this.limits.x)
+        const yAxisPad = this.axes.y.getDimension(this.plotDimensions, this.limits.y)
+        console.log(yAxisPad)
         this.plotDimensions = {
             top: this.pad.top,
             left: this.pad.left + yAxisPad,

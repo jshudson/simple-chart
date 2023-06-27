@@ -82,6 +82,7 @@ class Plot {
     })
   }
   element() {
+
     return this.group
   }
   render(limits, dimensions, points, integrals) {

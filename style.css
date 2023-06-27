@@ -55,9 +55,19 @@ svg text {
     outline: 1px solid green;
 } */
 
+.scroll-drag-horiz {
+    outline: 1px solid blue
+}
+
+.scroll-drag-vert {
+    outline: 1px solid blue
+}
+
+
 .scroll-drag-horiz:hover {
     cursor: url("./assets/cursors/grab-scroll-horiz.svg") 16 16, pointer;
 }
+
 .scroll-drag-vert:hover {
     cursor: url("./assets/cursors/grab-scroll-vert.svg") 16 16, pointer;
 }
