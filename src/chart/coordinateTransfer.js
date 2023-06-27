@@ -1,17 +1,29 @@
 export function transform1D(value, sourceA, sourceB, targetA, targetB) {
-    return (value - sourceA) * (targetB - targetA) / (sourceB - sourceA) + targetA
+  return (
+    ((value - sourceA) * (targetB - targetA)) / (sourceB - sourceA) + targetA
+  );
+}
+
+export function relativeOffset1D(offset, sourceA, sourceB, targetA, targetB) {
+  return (offset / (sourceB - sourceA)) * (targetB - targetA);
 }
 
 export function transform2D(point, sourceRect, targetRect) {
-    const { x: [sx1, sx2], y: [sy1, sy2] } = sourceRect
-    const { x: [tx1, tx2], y: [ty1, ty2] } = targetRect
-    return {
-        x: transform1D(point.x, sx1, sx2, tx1, tx2),
-        y: transform1D(point.y, sy1, sy2, ty1, ty2)
-    }
+  const {
+    x: [sx1, sx2],
+    y: [sy1, sy2],
+  } = sourceRect;
+  const {
+    x: [tx1, tx2],
+    y: [ty1, ty2],
+  } = targetRect;
+  return {
+    x: transform1D(point.x, sx1, sx2, tx1, tx2),
+    y: transform1D(point.y, sy1, sy2, ty1, ty2),
+  };
 }
 export function transform1DArray(points, sourceA, sourceB, targetA, targetB) {
-    return points.map(e => transform1D(e, sourceA, sourceB, targetA, targetB))
+  return points.map((e) => transform1D(e, sourceA, sourceB, targetA, targetB));
 }
 
 /**
@@ -28,11 +40,17 @@ export function transform1DArray(points, sourceA, sourceB, targetA, targetB) {
  * @returns {Object} - collection of xy data
  */
 export function transformXYObj(points, sourceRect, targetRect) {
-    const { x: [sx1, sx2], y: [sy1, sy2] } = sourceRect
-    const { x: [tx1, tx2], y: [ty1, ty2] } = targetRect
+  const {
+    x: [sx1, sx2],
+    y: [sy1, sy2],
+  } = sourceRect;
+  const {
+    x: [tx1, tx2],
+    y: [ty1, ty2],
+  } = targetRect;
 
-    return {
-        x: transform1DArray(points.x, sx1, sx2, tx1, tx2),
-        y: transform1DArray(points.y, sy1, sy2, ty1, ty2)
-    }
+  return {
+    x: transform1DArray(points.x, sx1, sx2, tx1, tx2),
+    y: transform1DArray(points.y, sy1, sy2, ty1, ty2),
+  };
 }

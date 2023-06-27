@@ -55,13 +55,6 @@ svg text {
     outline: 1px solid green;
 } */
 
-.scroll-drag-horiz {
-    outline: 1px solid blue
-}
-
-.scroll-drag-vert {
-    outline: 1px solid blue
-}
 
 
 .scroll-drag-horiz:hover {

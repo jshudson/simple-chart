@@ -1,11 +1,12 @@
 //@ts-nocheck
 
-function charToSuperscript(number) {
-  return result = "⁰¹²³⁴⁵⁶⁷⁸⁹"[number]
-}
+const limits = {
+  x: [0, 1],
+  y: [1, 2],
+};
 
-const superscript = (number) => {
-  return number.toString().replace(/./g, charToSuperscript)
-}
+const test = { ...limits };
+test.x = [3, 4];
 
-console.log(superscript(123))
+console.log(limits);
+console.log(test);
