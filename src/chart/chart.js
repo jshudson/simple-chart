@@ -98,7 +98,7 @@ class Chart {
    * @param {Rectangle} newLimits
    * @returns
    */
-  setLimits(newLimits) {
+  setLimits(newLimits, animate = false) {
     const [, xExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     const [, yExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     if (xExponent < -10 || yExponent < -10) return;
@@ -106,6 +106,10 @@ class Chart {
       x: [...newLimits.x],
       y: [...newLimits.y],
     };
+    if (!animate) {
+      this.render();
+      return;
+    }
     if (this.readyForAnimationFrame) {
       this.readyForAnimationFrame = false;
       window.requestAnimationFrame(this.render);
@@ -238,7 +242,7 @@ class Chart {
       [axis]: this.drag.limits[axis].map((e) => e - plotCoordDiff),
     };
 
-    this.setLimits(this.drag.newLimits);
+    this.setLimits(this.drag.newLimits, true);
   }
   handleMouseUp_Axis(event) {
     if (this.drag.active) this.setLimits(this.drag.newLimits);
@@ -393,6 +397,13 @@ class Chart {
     this.axes.y.render(this.plotDimensions, this.limits.y);
     console.timeEnd("render");
     this.readyForAnimationFrame = true;
+    if (this.onrender)
+      this.onrender({
+        target: this.chart,
+        limits: this.limits,
+        plotDimensions: this.plotDimensions,
+        integrals: this.integrals,
+      });
   }
   /**
    * Save the SVG Plot
@@ -417,8 +428,10 @@ class Chart {
    *
    * @param {*} callback
    */
-  bindEvent(event, callback) {
-    this.chart.addEventListener(event, callback);
+  addEventListener(type, callback) {
+    if (type == "onrender") {
+      this.onrender = callback;
+    }
   }
 }
 

@@ -26,7 +26,7 @@ fileInput.onchange = () => {
       const data3 = results.data.slice(4, results.data.length);
       const points = xyToObject(data3);
 
-      const chart = new Chart("graphtest", document.getElementById("graph"), {
+      chart = new Chart("graphtest", document.getElementById("graph"), {
         data: [points],
       });
     },
@@ -38,7 +38,13 @@ const xyToObject = (data) => {
 };
 const points = xyToObject(data);
 
-const chart = new Chart("graphtest", document.getElementById("graph"), {
+let chart = new Chart("graphtest", document.getElementById("graph"), {
   data: [points],
 });
-chart.bindEvent(() => {});
+
+let chart2 = new Chart("graphtest", document.getElementById("graph2"), {
+  data: [points],
+});
+chart.addEventListener("onrender", (event) => {
+  chart2.setLimits(event.limits, true);
+});
