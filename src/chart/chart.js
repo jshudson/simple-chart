@@ -45,6 +45,7 @@ class Chart {
     this.chart.ondblclick = this.handleDoubleClick.bind(this);
     this.chart.onwheel = this.handleWheel.bind(this);
     this.handleMouseMove_Axis = this.handleMouseMove_Axis.bind(this);
+    this.render = this.render.bind(this);
 
     this.handleMouseUp = this.handleMouseUp.bind(this);
 
@@ -87,6 +88,7 @@ class Chart {
     this.zoomRectangle = new ZoomRectangle(this.chart);
     this.render();
     this.interactionMode = "zoom";
+    this.readyForAnimationFrame = true;
   }
   setMode(mode) {
     this.interactionMode = mode;
@@ -104,7 +106,10 @@ class Chart {
       x: [...newLimits.x],
       y: [...newLimits.y],
     };
-    this.render();
+    if (this.readyForAnimationFrame) {
+      this.readyForAnimationFrame = false;
+      window.requestAnimationFrame(this.render);
+    }
   }
   resetLimits() {
     this.setLimits({
@@ -190,7 +195,6 @@ class Chart {
       axis,
       start: point[axis],
       end: point[axis],
-      prevUpdate: point[axis],
       limits: { ...this.limits },
       newLimits: { ...this.limits },
       screenOffset: {
@@ -234,11 +238,7 @@ class Chart {
       [axis]: this.drag.limits[axis].map((e) => e - plotCoordDiff),
     };
 
-    const updateDiff = this.drag.prevUpdate - this.drag.end;
-    if (Math.abs(updateDiff) > 10) {
-      this.drag.prevUpdate = this.drag.end;
-      this.setLimits(this.drag.newLimits);
-    }
+    this.setLimits(this.drag.newLimits);
   }
   handleMouseUp_Axis(event) {
     if (this.drag.active) this.setLimits(this.drag.newLimits);
@@ -392,6 +392,7 @@ class Chart {
     this.axes.x.render(this.plotDimensions, this.limits.x);
     this.axes.y.render(this.plotDimensions, this.limits.y);
     console.timeEnd("render");
+    this.readyForAnimationFrame = true;
   }
   /**
    * Save the SVG Plot
