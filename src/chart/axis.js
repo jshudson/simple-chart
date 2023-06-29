@@ -17,8 +17,9 @@ class Axis {
     this.direction = direction;
     this.id = `${id}-${this.direction}-axis`;
 
-    this.format = options.format;
-    this.label = options.label;
+    this.format = options?.format || "standard";
+    this.label = options?.label || "Units";
+    this.visible = options?.visible == undefined ? true : options.visible;
   }
   /**
    * Get the margin dimensions taken up by the axis for a certain range
@@ -27,6 +28,7 @@ class Axis {
    * @returns {number}
    */
   getDimension(plotDimensions, range) {
+    if (!this.visible) return 0;
     const temp = this.parent.appendChild(
       svg.newElement("g", {
         visibility: "hidden",
@@ -380,6 +382,7 @@ class Axis {
    */
   render(plotDimensions, range) {
     if (this.group) this.group.remove();
+    if (!this.visible) return;
     this.group = this.parent.appendChild(
       svg.newElement("g", { id: `${this.id}` })
     );

@@ -96,10 +96,12 @@ class Chart {
       x: new Axis(this.chart, this.id, "x", {
         label: "Time[min]",
         format: "standard",
+        visible: true,
       }),
       y: new Axis(this.chart, this.id, "y", {
         label: "mAU",
-        format: "standard",
+        format: "scientific",
+        visible: true,
       }),
     };
     this.plot = new Plot(this.chart, this.id + "plot");
@@ -183,15 +185,23 @@ class Chart {
     }
   }
   resetLimits() {
-    this.setLimits({
+    const baseLimits = {
       x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
       y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)],
+    };
+    const pads = {
+      x: (baseLimits.x[1] - baseLimits.x[0]) * 0.01,
+      y: (baseLimits.y[1] - baseLimits.y[0]) * 0.01,
+    };
+    this.setLimits({
+      x: [baseLimits.x[0] - pads.x, baseLimits.x[1] + pads.x],
+      y: [baseLimits.y[0] - pads.y, baseLimits.y[1] + pads.y],
     });
   }
 
   eventOnAxis(event) {
-    if (this.axes.x.boundary.contains(event.target)) return "x";
-    if (this.axes.y.boundary.contains(event.target)) return "y";
+    if (this.axes.x.boundary?.contains(event.target)) return "x";
+    if (this.axes.y.boundary?.contains(event.target)) return "y";
     return undefined;
   }
 
@@ -308,7 +318,7 @@ class Chart {
       x: event.offsetX,
       y: event.offsetY,
     })[axis];
-    const scrollFactor = scrollDirection < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
+    const scrollFactor = scrollDirection > 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
     const newCoords = [
       (this.limits[axis][0] - axisPlotCoord * (1 - scrollFactor)) /
         scrollFactor,
