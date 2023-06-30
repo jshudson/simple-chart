@@ -103,7 +103,7 @@ class Chart {
         visible: true,
       }),
     };
-    //window.addEventListener('focus',this.render)
+    window.addEventListener('focus',this.render)
     this.plot = new Plot(this.chart, this.id);
     this.integrals = [];
     this.zoomRectangle = new ZoomRectangle(this.chart);
