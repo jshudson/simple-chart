@@ -10,7 +10,7 @@ class Plot {
   addGroup(dimensions) {
     this.group = this.parent.appendChild(
       svg.newElement("g", {
-        id: this.id,
+        id: `${this.id}-plot`,
         transform: `translate(${dimensions.left},${dimensions.top})`,
       })
     );

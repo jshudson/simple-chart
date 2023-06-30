@@ -72,12 +72,12 @@ class Chart {
     );
 
     this.chart.onmousedown = this.handleMouseDown.bind(this);
-    this.chart.onmouseleave = this.handleMouseLeave.bind(this);
     this.chart.ondblclick = this.handleDoubleClick.bind(this);
     this.chart.onwheel = this.handleWheel.bind(this);
 
     this.handleMouseUp_Zoom = this.handleMouseUp_Zoom.bind(this);
     this.handleMouseMove_Zoom = this.handleMouseMove_Zoom.bind(this);
+
     this.handleMouseMove_Axis = this.handleMouseMove_Axis.bind(this);
     this.handleMouseUp_Axis = this.handleMouseUp_Axis.bind(this);
 
@@ -90,7 +90,6 @@ class Chart {
       /**@type {Rectangle} */
       this.limits = { x: [0, 0], y: [0, 0] };
     }
-    this.updateDimensions();
 
     this.axes = {
       x: new Axis(this.chart, this.id, "x", {
@@ -104,15 +103,15 @@ class Chart {
         visible: true,
       }),
     };
-    this.plot = new Plot(this.chart, this.id + "plot");
+    //window.addEventListener('focus',this.render)
+    this.plot = new Plot(this.chart, this.id);
     this.integrals = [];
     this.zoomRectangle = new ZoomRectangle(this.chart);
     this.interactionMode = "zoom";
     this.readyForAnimationFrame = true;
     if (this.data) this.resetLimits();
-    const parentResizeObserver = new ResizeObserver(this.render).observe(
-      this.parent
-    );
+    const parentResizeObserver = new ResizeObserver(this.render);
+    parentResizeObserver.observe(this.parent);
   }
   updateDimensions() {
     const style = window.getComputedStyle(this.chart);
@@ -229,22 +228,6 @@ class Chart {
         return;
     }
   }
-  /**
-   *
-   * @param {PointerEvent} event
-   */
-  handleMouseLeave(event) {
-    switch (this.interactionMode) {
-      case "zoom":
-        //        this.handleMouseLeave_Zoom(event);
-        return;
-      case "integrate":
-        //this.handleMouseDown_Integrate(event)
-        return;
-      default:
-        return;
-    }
-  }
   handleWheel(event) {
     event.preventDefault();
     const onAxis = this.eventOnAxis(event);
@@ -253,7 +236,6 @@ class Chart {
   handleMouseDown_Axis(event, axis) {
     const point = { x: event.offsetX, y: event.offsetY };
     this.drag = {
-      active: false,
       axis,
       start: point[axis],
       end: point[axis],
@@ -272,8 +254,6 @@ class Chart {
   }
 
   handleMouseMove_Axis(event) {
-    this.drag.active = true;
-
     const axis = this.drag.axis;
     const pageOffset = this.drag.pageOffset;
     const point = {
@@ -308,8 +288,6 @@ class Chart {
     this.setLimits(this.drag.newLimits, true);
   }
   handleMouseUp_Axis(event) {
-    if (this.drag.active) this.setLimits(this.drag.newLimits);
-    this.drag.active = false;
     document.removeEventListener("mousemove", this.handleMouseMove_Axis);
   }
   handleWheel_Axis(event, axis) {
