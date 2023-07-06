@@ -1,9 +1,9 @@
-import * as svg from "../svgUtils/svgUtils.js";
-import Plot from "./plot.js";
-import Axis from "./axis.js";
-import ZoomRectangle from "./zoomRectangle.js";
-import { getScientific } from "../utils/utils.js";
-import * as xform from "./coordinateTransfer.js";
+import * as svg from '../svgUtils/svgUtils.js';
+import Plot from './plot.js';
+import Axis from './axis.js';
+import ZoomRectangle from './zoomRectangle.js';
+import { getScientific } from '../utils/utils.js';
+import * as xform from './coordinateTransfer.js';
 
 const DEFAULT_OPTIONS = {
   data: { x: [], y: [] },
@@ -15,8 +15,8 @@ const ZOOM_FACTOR = 1.5;
 
 const sideStyleStringToObject = (style) => {
   const array = style
-    .replace(/px/g, "")
-    .split(" ")
+    .replace(/px/g, '')
+    .split(' ')
     .map((e) => Number(e));
   switch (array.length) {
     case 1:
@@ -64,13 +64,16 @@ class Chart {
 
     /**@type {SVGGraphicsElement} */
     this.chart = this.parent.appendChild(
-      svg.newElement("svg", {
+      svg.newElement('svg', {
         id: this.id,
-        "pointer-events": "bounding-box",
-        xmlns: "http://www.w3.org/2000/svg",
+        'pointer-events': 'bounding-box',
+        xmlns: 'http://www.w3.org/2000/svg',
       })
     );
 
+    this.chart.oncontextmenu = (e) => {
+      return false;
+    };
     this.chart.onmousedown = this.handleMouseDown.bind(this);
     this.chart.ondblclick = this.handleDoubleClick.bind(this);
     this.chart.onwheel = this.handleWheel.bind(this);
@@ -90,24 +93,25 @@ class Chart {
       /**@type {Rectangle} */
       this.limits = { x: [0, 0], y: [0, 0] };
     }
-
+    this.cull = options?.cull ? options.cull : false;
+    console.log(this.cull);
     this.axes = {
-      x: new Axis(this.chart, this.id, "x", {
-        label: "Time[min]",
-        format: "standard",
+      x: new Axis(this.chart, this.id, 'x', {
+        label: 'Time[min]',
+        format: 'standard',
         visible: true,
       }),
-      y: new Axis(this.chart, this.id, "y", {
-        label: "mAU",
-        format: "scientific",
+      y: new Axis(this.chart, this.id, 'y', {
+        label: 'mAU',
+        format: 'scientific',
         visible: true,
       }),
     };
-    window.addEventListener('focus',this.render)
+    window.addEventListener('focus', this.render);
     this.plot = new Plot(this.chart, this.id);
     this.integrals = [];
     this.zoomRectangle = new ZoomRectangle(this.chart);
-    this.interactionMode = "zoom";
+    this.interactionMode = 'zoom';
     this.readyForAnimationFrame = true;
     if (this.data) this.resetLimits();
     const parentResizeObserver = new ResizeObserver(this.render);
@@ -120,7 +124,7 @@ class Chart {
     this.width = this.parent.offsetWidth;
     this.height = this.parent.offsetHeight;
     this.chart.setAttribute(
-      "width",
+      'width',
       String(
         this.width -
           (this.margin.right +
@@ -130,7 +134,7 @@ class Chart {
       )
     );
     this.chart.setAttribute(
-      "height",
+      'height',
       String(
         this.height -
           (this.margin.top +
@@ -197,14 +201,47 @@ class Chart {
       y: [baseLimits.y[0] - pads.y, baseLimits.y[1] + pads.y],
     });
   }
+  fullYScale() {
+    const start = this.data[0].x.findIndex((e) => e >= this.limits.x[0]);
+    const end = this.data[0].x.findIndex((e) => e > this.limits.x[1]);
+    console.log(start, end);
+    if (start == end) return;
+    const filter = this.data[0].y.slice(start, end);
+    const baseLimits = [Math.min(...filter), Math.max(...filter)];
+    const pad = (baseLimits[1] - baseLimits[0]) * 0.01;
+    this.setLimits({
+      x: [...this.limits.x],
+      y: [baseLimits[0] - pad, baseLimits[1] + pad],
+    });
+  }
+  fullXScale() {
+    const baseLimits = [
+      this.data[0].x[0],
+      this.data[0].x[this.data[0].x.length - 1],
+    ];
+    const pad = (baseLimits[1] - baseLimits[0]) * 0.01;
+    this.setLimits({
+      x: [baseLimits[0] - pad, baseLimits[1] + pad],
+      y: [...this.limits.y],
+    });
+  }
 
   eventOnAxis(event) {
-    if (this.axes.x.boundary?.contains(event.target)) return "x";
-    if (this.axes.y.boundary?.contains(event.target)) return "y";
+    if (this.axes.x.boundary?.contains(event.target)) return 'x';
+    if (this.axes.y.boundary?.contains(event.target)) return 'y';
     return undefined;
   }
 
   handleDoubleClick(event) {
+    const onAxis = this.eventOnAxis(event);
+    if (onAxis == 'x') {
+      this.fullXScale();
+      return;
+    }
+    if (onAxis == 'y') {
+      this.fullYScale();
+      return;
+    }
     this.resetLimits();
   }
   /**
@@ -218,10 +255,10 @@ class Chart {
     if (onAxis) this.handleMouseDown_Axis(event, onAxis);
 
     switch (this.interactionMode) {
-      case "zoom":
+      case 'zoom':
         this.handleMouseDown_Zoom(event);
         return;
-      case "integrate":
+      case 'integrate':
         this.handleMouseDown_Integrate(event);
         return;
       default:
@@ -234,6 +271,10 @@ class Chart {
     if (onAxis) this.handleWheel_Axis(event, onAxis);
   }
   handleMouseDown_Axis(event, axis) {
+    if (event.buttons != 1 && event.buttons != 2) {
+      return;
+    }
+    console.log('adding event listener');
     const point = { x: event.offsetX, y: event.offsetY };
     this.drag = {
       axis,
@@ -247,8 +288,8 @@ class Chart {
         y: event.pageY - point.y,
       },
     };
-    document.addEventListener("mousemove", this.handleMouseMove_Axis);
-    document.addEventListener("mouseup", this.handleMouseUp_Axis.bind(this), {
+    document.addEventListener('mousemove', this.handleMouseMove_Axis);
+    document.addEventListener('mouseup', this.handleMouseUp_Axis.bind(this), {
       once: true,
     });
   }
@@ -264,12 +305,12 @@ class Chart {
     this.drag.end = point[axis];
 
     const difference =
-      axis == "x"
+      axis == 'x'
         ? this.drag.end - this.drag.start
         : this.drag.start - this.drag.end;
 
     const sourceB =
-      axis == "x" ? this.plotDimensions.width : this.plotDimensions.height;
+      axis == 'x' ? this.plotDimensions.width : this.plotDimensions.height;
 
     const plotCoordDiff = xform.relativeOffset1D(
       difference,
@@ -277,18 +318,44 @@ class Chart {
       sourceB,
       ...this.drag.limits[axis]
     );
-
-    /**@type {Rectangle} */
-    this.drag.newLimits = {
-      x: [...this.limits.x],
-      y: [...this.limits.y],
-      [axis]: this.drag.limits[axis].map((e) => e - plotCoordDiff),
-    };
+    if (event.buttons == 1) {
+      /**@type {Rectangle} */
+      this.drag.newLimits = {
+        x: [...this.limits.x],
+        y: [...this.limits.y],
+        [axis]: this.drag.limits[axis].map((e) => e - plotCoordDiff),
+      };
+    } else {
+      const clickA = axis == 'x' ? 0 : sourceB;
+      const clickB = axis == 'x' ? sourceB : 0;
+      const clickPoint = xform.transform1D(
+        this.drag.start -
+          (axis == 'x' ? this.plotDimensions.left : this.plotDimensions.top),
+        clickA,
+        clickB,
+        ...this.drag.limits[axis]
+      );
+      const newLimit = xform.transform1D(
+        this.drag.limits[axis][1],
+        this.drag.limits[axis][0],
+        clickPoint + plotCoordDiff,
+        this.drag.limits[axis][0],
+        clickPoint
+      );
+      if (newLimit > this.drag.limits[axis][0]) {
+        /**@type {Rectangle} */
+        this.drag.newLimits = {
+          x: [...this.limits.x],
+          y: [...this.limits.y],
+          [axis]: [this.drag.limits[axis][0], newLimit],
+        };
+      }
+    }
 
     this.setLimits(this.drag.newLimits, true);
   }
   handleMouseUp_Axis(event) {
-    document.removeEventListener("mousemove", this.handleMouseMove_Axis);
+    document.removeEventListener('mousemove', this.handleMouseMove_Axis);
   }
   handleWheel_Axis(event, axis) {
     const scrollDirection = Math.sign(event.deltaY);
@@ -323,10 +390,10 @@ class Chart {
     if (this.plot.element().contains(event.target)) {
       this.zoomRectangle.activate(point, this.plotDimensions, pageOffset);
 
-      document.addEventListener("mouseup", this.handleMouseUp_Zoom, {
+      document.addEventListener('mouseup', this.handleMouseUp_Zoom, {
         once: true,
       });
-      document.addEventListener("mousemove", this.handleMouseMove_Zoom);
+      document.addEventListener('mousemove', this.handleMouseMove_Zoom);
     }
   }
   handleMouseMove_Zoom(event) {
@@ -336,7 +403,7 @@ class Chart {
     this.zoomRectangle.update(point);
   }
   handleMouseUp_Zoom() {
-    document.removeEventListener("mousemove", this.handleMouseMove_Zoom);
+    document.removeEventListener('mousemove', this.handleMouseMove_Zoom);
 
     const zoomCoords = this.zoomRectangle.coordinates;
     this.zoomRectangle.deactivate();
@@ -378,7 +445,7 @@ class Chart {
       this.limits
     );
     this.integrals.push({
-      x: [click.x, click.x + 0.5],
+      x: [click.x, click.x + 0.1],
       y: [click.y, click.y + 1],
     });
     this.render();
@@ -406,7 +473,8 @@ class Chart {
    */
   render() {
     this.readyForAnimationFrame = false;
-    console.time("render");
+    // console.time(`${this.id} render`);
+
     this.updateDimensions();
     const xAxisPad = this.axes.x.getDimension(
       this.plotDimensions,
@@ -423,16 +491,19 @@ class Chart {
       width: this.width - this.frame.left - yAxisPad - this.frame.right,
       height: this.height - this.frame.top - xAxisPad - this.frame.bottom,
     };
+
     this.plot.render(
       this.limits,
       this.plotDimensions,
       this.data[0],
-      this.integrals
+      this.integrals,
+      this.cull
     );
     this.axes.x.render(this.plotDimensions, this.limits.x);
     this.axes.y.render(this.plotDimensions, this.limits.y);
-    console.timeEnd("render");
+
     this.readyForAnimationFrame = true;
+
     if (this.onrender)
       this.onrender({
         target: this.chart,
@@ -440,20 +511,95 @@ class Chart {
         plotDimensions: this.plotDimensions,
         integrals: this.integrals,
       });
+    // console.timeEnd(`${this.id} render`);
   }
   /**
    * Save the SVG Plot
-   * @param {*} svgEl
    * @param {*} name
    */
-  saveSvg(svgEl, name) {
-    var svgData = svgEl.outerHTML;
+  async saveSvg(name) {
     var preface = '<?xml version="1.0" standalone="no"?>\r\n';
+    async function getCSS() {
+      const response = await fetch('./style.css');
+      const text = await response.text();
+      return text;
+    }
+    const css = await getCSS();
+    const svgClone = this.chart.cloneNode(true);
+    const style = document.createElement('style');
+    style.innerHTML = `
+    
+    svg {
+      outline: 1px solid black;
+      /* padding: 10px 50px;
+      margin: 10px; */
+      box-sizing: content-box;
+    }
+    
+    svg text {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 0.8em;
+    }
+    
+    
+    /* g {
+        outline: 1px solid green;
+    } */
+    
+    .integral {
+      fill: #0074d9;
+    }
+    
+    .graph {
+      height: 300px;
+      max-height: 1000px;
+      resize: vertical;
+      overflow: hidden;
+      outline: 1px solid orange;
+      margin-left: 100px;
+      /* width: 100%; */
+    }
+    
+    .plot {
+      fill: none;
+      stroke: #0074d9;
+      stroke-width: 2px;
+      stroke-linejoin: round;
+    }
+    
+    .zoom {
+      fill: none;
+      stroke: blue;
+      stroke-width: 1px;
+    }
+    
+    .plot0 {
+      stroke: green;
+    }
+    
+    .plot1 {
+      stroke: black;
+    }
+    
+    /* #graph {
+        outline: 1px solid green;
+    } */
+    
+    .scroll-drag-horiz:hover {
+      cursor: url("./assets/cursors/grab-scroll-horiz.svg") 16 16, pointer;
+    }
+    
+    .scroll-drag-vert:hover {
+      cursor: url("./assets/cursors/grab-scroll-vert.svg") 16 16, pointer;
+    }
+    `;
+    svgClone.prepend(style);
+    var svgData = svgClone.outerHTML;
     var svgBlob = new Blob([preface, svgData], {
-      type: "image/svg+xml;charset=utf-8",
+      type: 'image/svg+xml;charset=utf-8',
     });
     var svgUrl = URL.createObjectURL(svgBlob);
-    var downloadLink = document.createElement("a");
+    var downloadLink = document.createElement('a');
     downloadLink.href = svgUrl;
     downloadLink.download = name;
     document.body.appendChild(downloadLink);
@@ -465,7 +611,7 @@ class Chart {
    * @param {*} callback
    */
   addEventListener(type, callback) {
-    if (type == "onrender") {
+    if (type == 'onrender') {
       this.onrender = callback;
     }
   }

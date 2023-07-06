@@ -1,18 +1,21 @@
 //@ts-nocheck
-import exported from "./data.js";
+import exported from './data.js';
 const { data, data2 } = exported;
 // import Chart from './src/chart/chartClassNew.js'
-import Chart from "./src/chart/chart.js";
-import * as svg from "./src/svgUtils/svgUtils.js";
+import Chart from './src/chart/chart.js';
+import * as svg from './src/svgUtils/svgUtils.js';
 
-import { base64ArrayBuffer } from "./src/utils/utils.js";
+import { base64ArrayBuffer } from './src/utils/utils.js';
 
-const fileInput = document.getElementById("file");
-const checkBox = document.getElementById("mode");
-
+const fileInput = document.getElementById('file');
+const checkBox = document.getElementById('mode');
+const save = document.getElementById('save');
+save.onclick = () => {
+  chart.saveSvg('test');
+};
 checkBox.onchange = (event) => {
   console.log(event.target.checked);
-  chart.setMode(event.target.checked ? "integrate" : "zoom");
+  chart.setMode(event.target.checked ? 'integrate' : 'zoom');
 };
 
 fileInput.onchange = () => {
@@ -34,16 +37,18 @@ const xyToObject = (data) => {
 };
 const points = xyToObject(data);
 
-let chart = new Chart("graphtest", document.getElementById("graph"), {
+let chart = new Chart('graphtest', document.getElementById('graph'), {
   data: [points],
+  cull: true,
 });
 
-let chart2 = new Chart("graphtest2", document.getElementById("graph2"), {
+let chart2 = new Chart('graphtest2', document.getElementById('graph2'), {
   data: [points],
 });
-chart.addEventListener("onrender", (event) => {
+chart.addEventListener('onrender', (event) => {
   chart2.setLimits(event.limits, true);
 });
+
 
 /**
  * Gets styles by a classname
@@ -52,9 +57,8 @@ chart.addEventListener("onrender", (event) => {
  * @param string className_
  */
 function getStyle(className_) {
-
   for (const sheet of window.document.styleSheets) {
-    console.log(sheet)
+    console.log(sheet);
     for (const cssClass of sheet.cssRules) {
       if (cssClass.selectorText == className_) {
         let returnValue;
@@ -64,7 +68,7 @@ function getStyle(className_) {
           returnValue = cssClass.style.cssText;
         }
         if (returnValue.indexOf(cssClass.selectorText) == -1) {
-          returnValue = cssClass.selectorText + "{" + ret + "}";
+          returnValue = cssClass.selectorText + '{' + ret + '}';
         }
         return returnValue;
       }
@@ -116,8 +120,8 @@ window.convertCssUnit = function (cssValue, target) {
 
   // Match positive and negative numbers including decimals with following unit
   const pattern = new RegExp(
-    `^([\-\+]?(?:\\d+(?:\\.\\d+)?))(${Object.keys(supportedUnits).join("|")})$`,
-    "i"
+    `^([\-\+]?(?:\\d+(?:\\.\\d+)?))(${Object.keys(supportedUnits).join('|')})$`,
+    'i'
   );
 
   // If is a match, return example: [ "-2.75rem", "-2.75", "rem" ]

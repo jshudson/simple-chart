@@ -54,3 +54,14 @@ export function transformXYObj(points, sourceRect, targetRect) {
     y: transform1DArray(points.y, sy1, sy2, ty1, ty2),
   };
 }
+export function line2Points(point1, point2) {
+  const m = (point2.y - point1.y) / (point2.x - point1.x);
+  const b = point1.y - m * point1.x;
+  return { m, b };
+}
+export function extractPoint(points, index) {
+  return {
+    x: points.x[index],
+    y: points.y[index],
+  };
+}

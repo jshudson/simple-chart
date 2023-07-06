@@ -1,4 +1,4 @@
-import * as svg from "../svgUtils/svgUtils.js";
+import * as svg from '../svgUtils/svgUtils.js';
 
 export default class ZoomRectangle {
   /**
@@ -90,7 +90,7 @@ export default class ZoomRectangle {
         this.rectangle.y[0],
         this.rectangle.x[1] - this.rectangle.x[0],
         this.rectangle.y[1] - this.rectangle.y[0],
-        { class: "zoom" }
+        { class: 'zoom' }
       )
     );
     this.readyForAnimationFrame = true;

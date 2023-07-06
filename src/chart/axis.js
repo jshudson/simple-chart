@@ -1,8 +1,8 @@
 /// <reference types="user">
 // @ts-check
-import * as svg from "../svgUtils/svgUtils.js";
-import * as xform from "./coordinateTransfer.js";
-import { getScientific, superscript } from "../utils/utils.js";
+import * as svg from '../svgUtils/svgUtils.js';
+import * as xform from './coordinateTransfer.js';
+import { getScientific, superscript } from '../utils/utils.js';
 
 class Axis {
   /**
@@ -17,8 +17,8 @@ class Axis {
     this.direction = direction;
     this.id = `${id}-${this.direction}-axis`;
 
-    this.format = options?.format || "standard";
-    this.label = options?.label || "Units";
+    this.format = options?.format || 'standard';
+    this.label = options?.label || 'Units';
     this.visible = options?.visible == undefined ? true : options.visible;
   }
   /**
@@ -30,8 +30,8 @@ class Axis {
   getDimension(plotDimensions, range) {
     if (!this.visible) return 0;
     const temp = this.parent.appendChild(
-      svg.newElement("g", {
-        visibility: "hidden",
+      svg.newElement('g', {
+        visibility: 'hidden',
         id: `${this.direction}${range[0]}-${range[1]}`,
       })
     );
@@ -39,7 +39,7 @@ class Axis {
     const bBox = temp.getBBox();
     temp.remove();
 
-    return this.direction == "x" ? bBox.height : bBox.width;
+    return this.direction == 'x' ? bBox.height : bBox.width;
   }
   /**
    * Draw the axis
@@ -54,7 +54,7 @@ class Axis {
     /**@type {Point} */
     let offset = { x: 0, y: 0 };
 
-    if (this.direction == "x") {
+    if (this.direction == 'x') {
       offset = {
         x: 0,
         y: plotDimensions.top + plotDimensions.height,
@@ -74,7 +74,7 @@ class Axis {
       };
     }
 
-    parent.setAttribute("transform", `translate(${offset.x},${offset.y})`);
+    parent.setAttribute('transform', `translate(${offset.x},${offset.y})`);
 
     this.labelAxis(axisScreenCoords, range, parent);
     this.addBoundingRectangle(parent, axisScreenCoords);
@@ -86,16 +86,16 @@ class Axis {
    */
   addBoundingRectangle(parent, axisScreenCoords) {
     const dimension =
-      this.direction == "x" ? parent.getBBox().height : parent.getBBox().width;
-    let attributes = { fill: "none" };
-    if (this.direction == "x") {
+      this.direction == 'x' ? parent.getBBox().height : parent.getBBox().width;
+    let attributes = { fill: 'none' };
+    if (this.direction == 'x') {
       attributes = {
         ...attributes,
         x: axisScreenCoords.x[0],
         y: 0,
         width: axisScreenCoords.x[1] - axisScreenCoords.x[0],
         height: dimension,
-        class: "scroll-drag-horiz",
+        class: 'scroll-drag-horiz',
       };
     } else {
       attributes = {
@@ -104,10 +104,10 @@ class Axis {
         y: axisScreenCoords.y[1],
         width: dimension,
         height: axisScreenCoords.y[0] - axisScreenCoords.y[1],
-        class: "scroll-drag-vert",
+        class: 'scroll-drag-vert',
       };
     }
-    this.rect = parent.appendChild(svg.newElement("rect", attributes));
+    this.rect = parent.appendChild(svg.newElement('rect', attributes));
   }
   /**
    * Get the bounding rectangle for the axis
@@ -164,14 +164,14 @@ class Axis {
       roundedInterval,
     ]);
 
-    const axisLabelGroup = parent.appendChild(svg.newElement("g", {}));
+    const axisLabelGroup = parent.appendChild(svg.newElement('g', {}));
     const axisLabel = this.addAxisLabel(this.label, axisLabelGroup, {
       x: screenRange.x[1],
       y: screenRange.y[1],
     });
 
     //add notation for scientific scaling
-    if (this.format == "scientific") {
+    if (this.format == 'scientific') {
       this.addAxisLabel(
         ` ×10${superscript(exponentRange[1])}`,
         axisLabelGroup,
@@ -183,7 +183,7 @@ class Axis {
     }
     const axisLabelBox = axisLabelGroup.getBBox();
 
-    const ticks = parent.appendChild(svg.newElement("g", {}));
+    const ticks = parent.appendChild(svg.newElement('g', {}));
 
     let prevTickLabelBox;
 
@@ -200,12 +200,12 @@ class Axis {
         tickLabelText,
         ticks,
         tickScreenCoordinates[i],
-        screenRange[this.direction == "x" ? "y" : "x"][1]
+        screenRange[this.direction == 'x' ? 'y' : 'x'][1]
       );
       //remove tick labels that overlap with stuff
       const tickLabelBox = newTickLabel.getBBox();
 
-      if (this.direction == "x") {
+      if (this.direction == 'x') {
         if (
           tickLabelBox.x + tickLabelBox.width >= axisLabelBox.x ||
           tickLabelBox.x <= prevTickLabelBox?.x + prevTickLabelBox?.width
@@ -252,7 +252,7 @@ class Axis {
    * @returns
    */
   getFormattedText(value, extraDigits, exponentRange, interval) {
-    if (this.format == "scientific") {
+    if (this.format == 'scientific') {
       return this.getScientificText(value, extraDigits, exponentRange);
     }
     //min and max exponent define how many decimals are displayed
@@ -282,15 +282,15 @@ class Axis {
    * @returns {SVGGraphicsElement}
    */
   addTickLine(parent, coord, size) {
-    const perpendicular = this.direction === "x" ? "y" : "x";
-    if (this.direction == "y") size *= -1;
+    const perpendicular = this.direction === 'x' ? 'y' : 'x';
+    if (this.direction == 'y') size *= -1;
     return parent.appendChild(
-      svg.newElement("line", {
+      svg.newElement('line', {
         [`${this.direction}1`]: coord,
         [`${this.direction}2`]: coord,
         [`${perpendicular}1`]: 0,
         [`${perpendicular}2`]: size,
-        stroke: "black",
+        stroke: 'black',
       })
     );
   }
@@ -303,15 +303,15 @@ class Axis {
    * @returns {SVGGraphicsElement}
    */
   addTickLabel(text, parent, coord, spacing) {
-    const perpendicular = this.direction === "x" ? "y" : "x";
-    const baseline = this.direction === "x" ? "hanging" : "middle";
-    const anchor = this.direction === "x" ? "middle" : "end";
+    const perpendicular = this.direction === 'x' ? 'y' : 'x';
+    const baseline = this.direction === 'x' ? 'hanging' : 'middle';
+    const anchor = this.direction === 'x' ? 'middle' : 'end';
     const label = parent.appendChild(
-      svg.newElement("text", {
+      svg.newElement('text', {
         [this.direction]: coord,
         [perpendicular]: spacing,
-        "dominant-baseline": baseline,
-        "text-anchor": anchor,
+        'dominant-baseline': baseline,
+        'text-anchor': anchor,
       })
     );
     label.innerHTML = text;
@@ -326,9 +326,9 @@ class Axis {
    */
   addAxisLabel(text, parent, coordinates) {
     const label = parent.appendChild(
-      svg.newElement("text", {
-        "text-anchor": "end",
-        "dominant-baseline": "hanging",
+      svg.newElement('text', {
+        'text-anchor': 'end',
+        'dominant-baseline': 'hanging',
         x: coordinates.x,
         y: coordinates.y,
       })
@@ -384,7 +384,7 @@ class Axis {
     if (this.group) this.group.remove();
     if (!this.visible) return;
     this.group = this.parent.appendChild(
-      svg.newElement("g", { id: `${this.id}` })
+      svg.newElement('g', { id: `${this.id}` })
     );
     this.drawAxis(this.group, plotDimensions, range);
   }

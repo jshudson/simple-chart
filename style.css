@@ -5,8 +5,9 @@
 
 svg {
   outline: 1px solid black;
-  padding: 10px 50px;
-  margin: 0px;
+  /* padding: 10px 50px;
+  margin: 10px; */
+  box-sizing: content-box;
 }
 
 svg text {
@@ -35,7 +36,7 @@ svg text {
 
 .plot {
   fill: none;
-  stroke: #0074d9;
+  stroke: var(--plot1);
   stroke-width: 2px;
   stroke-linejoin: round;
 }
