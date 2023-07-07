@@ -2,8 +2,8 @@
 import exported from './data.js';
 const { data, data2 } = exported;
 // import Chart from './src/chart/chartClassNew.js'
-import Chart from './src/chart/chart.js';
-import * as svg from './src/svgUtils/svgUtils.js';
+import Chart from './src/chart/index.js';
+import * as svg from './src/chart/src/svgUtils.js';
 
 import { base64ArrayBuffer } from './src/utils/utils.js';
 
@@ -48,7 +48,6 @@ let chart2 = new Chart('graphtest2', document.getElementById('graph2'), {
 chart.addEventListener('onrender', (event) => {
   chart2.setLimits(event.limits, true);
 });
-
 
 /**
  * Gets styles by a classname

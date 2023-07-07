@@ -1,4 +1,4 @@
-import * as svg from '../svgUtils/svgUtils.js';
+import * as svg from './svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 class Plot {
   constructor(parent, id, options) {

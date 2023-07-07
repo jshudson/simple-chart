@@ -1,8 +1,8 @@
-import * as svg from '../svgUtils/svgUtils.js';
+import * as svg from './svgUtils.js';
 import Plot from './plot.js';
 import Axis from './axis.js';
 import ZoomRectangle from './zoomRectangle.js';
-import { getScientific } from '../utils/utils.js';
+import { getScientific } from '../../utils/utils.js';
 import * as xform from './coordinateTransfer.js';
 
 const DEFAULT_OPTIONS = {
@@ -517,94 +517,8 @@ class Chart {
    * Save the SVG Plot
    * @param {*} name
    */
-  async saveSvg(name) {
-    var preface = '<?xml version="1.0" standalone="no"?>\r\n';
-    async function getCSS() {
-      const response = await fetch('./style.css');
-      const text = await response.text();
-      return text;
-    }
-    const css = await getCSS();
-    const svgClone = this.chart.cloneNode(true);
-    const style = document.createElement('style');
-    style.innerHTML = `
-    
-    svg {
-      outline: 1px solid black;
-      /* padding: 10px 50px;
-      margin: 10px; */
-      box-sizing: content-box;
-    }
-    
-    svg text {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      font-size: 0.8em;
-    }
-    
-    
-    /* g {
-        outline: 1px solid green;
-    } */
-    
-    .integral {
-      fill: #0074d9;
-    }
-    
-    .graph {
-      height: 300px;
-      max-height: 1000px;
-      resize: vertical;
-      overflow: hidden;
-      outline: 1px solid orange;
-      margin-left: 100px;
-      /* width: 100%; */
-    }
-    
-    .plot {
-      fill: none;
-      stroke: #0074d9;
-      stroke-width: 2px;
-      stroke-linejoin: round;
-    }
-    
-    .zoom {
-      fill: none;
-      stroke: blue;
-      stroke-width: 1px;
-    }
-    
-    .plot0 {
-      stroke: green;
-    }
-    
-    .plot1 {
-      stroke: black;
-    }
-    
-    /* #graph {
-        outline: 1px solid green;
-    } */
-    
-    .scroll-drag-horiz:hover {
-      cursor: url("./assets/cursors/grab-scroll-horiz.svg") 16 16, pointer;
-    }
-    
-    .scroll-drag-vert:hover {
-      cursor: url("./assets/cursors/grab-scroll-vert.svg") 16 16, pointer;
-    }
-    `;
-    svgClone.prepend(style);
-    var svgData = svgClone.outerHTML;
-    var svgBlob = new Blob([preface, svgData], {
-      type: 'image/svg+xml;charset=utf-8',
-    });
-    var svgUrl = URL.createObjectURL(svgBlob);
-    var downloadLink = document.createElement('a');
-    downloadLink.href = svgUrl;
-    downloadLink.download = name;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+  saveSvg(name) {
+    svg.saveSvg(this.chart,name)  
   }
   /**
    *

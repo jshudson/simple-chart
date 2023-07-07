@@ -1,4 +1,4 @@
-import * as svg from '../svgUtils/svgUtils.js';
+import * as svg from './svgUtils.js';
 
 export default class ZoomRectangle {
   /**
