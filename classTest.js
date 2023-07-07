@@ -37,13 +37,26 @@ const xyToObject = (data) => {
 };
 const points = xyToObject(data);
 
-let chart = new Chart('graphtest', document.getElementById('graph'), {
+let chart = new Chart('1', document.getElementById('graph'), {
   data: [points],
   cull: true,
 });
 
-let chart2 = new Chart('graphtest2', document.getElementById('graph2'), {
-  data: [points],
+const test = await fetch('./119188-3.csv');
+const testData = await test.text();
+let points2;
+Papa.parse(testData, {
+  dynamicTyping: true,
+  skipEmptyLines: true,
+  complete: function (results) {
+    console.log(results.data);
+    const newData = results.data.slice(4, results.data.length);
+    points2 = xyToObject(newData);
+  },
+});
+
+let chart2 = new Chart('2', document.getElementById('graph2'), {
+  data: [points2],
 });
 chart.addEventListener('onrender', (event) => {
   chart2.setLimits(event.limits, true);

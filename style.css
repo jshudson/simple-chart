@@ -37,7 +37,7 @@ svg text {
 .plot {
   fill: none;
   stroke: var(--plot1);
-  stroke-width: 2px;
+  stroke-width: 1pt;
   stroke-linejoin: round;
 }
 
