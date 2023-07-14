@@ -1,7 +1,9 @@
 //@ts-nocheck
 import exported from './data.js';
 const { data, data2 } = exported;
-// import Chart from './src/chart/chartClassNew.js'
+
+import ChartContainer from './src/chart/src/chartContainer.js';
+
 import Chart from './src/chart/index.js';
 import * as svg from './src/chart/src/svgUtils.js';
 
@@ -26,7 +28,7 @@ fileInput.onchange = () => {
     complete: function (results) {
       const data3 = results.data.slice(4, results.data.length);
       const points = xyToObject(data3);
-      chart.data = [{ ...points }];
+      chart.data = { ...points };
       chart.resetLimits();
     },
   });
@@ -37,30 +39,35 @@ const xyToObject = (data) => {
 };
 const points = xyToObject(data);
 
-let chart = new Chart('1', document.getElementById('graph'), {
-  data: [points],
-  cull: true,
-});
+// let chart = new Chart('1', document.getElementById('graph'), {
+//   data: points,
+//   cull: true,
+// });
 
-const test = await fetch('./119188-3.csv');
-const testData = await test.text();
-let points2;
-Papa.parse(testData, {
-  dynamicTyping: true,
-  skipEmptyLines: true,
-  complete: function (results) {
-    console.log(results.data);
-    const newData = results.data.slice(4, results.data.length);
-    points2 = xyToObject(newData);
-  },
-});
+// const test = await fetch('./119188-3.csv');
+// const testData = await test.text();
+// let points2;
+// Papa.parse(testData, {
+//   dynamicTyping: true,
+//   skipEmptyLines: true,
+//   complete: function (results) {
+//     console.log(results.data);
+//     const newData = results.data.slice(4, results.data.length);
+//     points2 = xyToObject(newData);
+//   },
+// });
 
-let chart2 = new Chart('2', document.getElementById('graph2'), {
-  data: [points2],
-});
-chart.addEventListener('onrender', (event) => {
-  chart2.setLimits(event.limits, true);
-});
+// let chart2 = new Chart('2', document.getElementById('graph2'), {
+//   data: points2,
+// });
+// chart.addEventListener('onrender', (event) => {
+//   chart2.setLimits(event.limits, true);
+// });
+let container = new ChartContainer(document.getElementById('graph'))
+container.addData(points);
+container.addData(points);
+container.addData(points);
+container.addData(points);
 
 /**
  * Gets styles by a classname

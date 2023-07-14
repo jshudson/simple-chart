@@ -1,0 +1,23 @@
+{
+  "id": "String",
+  "parent": "Empty Div",
+  "chart": "Root SVG Element",
+  "data": "[xyData] currently only supports one",
+  "limits": "Rectangular representation of min and max for each axis",
+  "cull": "Boolean to cull data during display for plot",
+  "axes": {
+    "x": "x axis object",
+    "y": "y axis object"
+  },
+  "plot": "plot object",
+  "integrals": "list of integrals for data",
+  "zoomRectangle": "ZoomRectangle object for interaction",
+  "interactionMode": "Currently zoom or integrate",
+  "readyForAnimationFrame": "Allows redrawing when previous draw is complete, used for continuous interations",
+  "margin": "Margin from calculated style",
+  "padding": "Padding from calcualted style",
+  "width": "chart width from parent",
+  "height": "chart height from parent",
+  "frame": "calculated margins for plot",
+  "plotDimension": "size of rendered plot area"
+}

@@ -8,14 +8,44 @@ import ZoomRectangle from './zoomRectangle.js';
 
 import * as axisMouseHandlers from './chartAxisMouseHandlers.js';
 import * as zoomMouseHandlers from './chartZoomMouseHandlers.js';
+import * as integrateMouseHandlers from './chartIntegrateMouseHandlers.js';
 
-const DEFAULT_OPTIONS = {
-  data: { x: [], y: [] },
-  limits: { x: [0, 0], y: [] },
-  pad: { top: 10, right: 10, bottom: 10, left: 0 },
-};
+const SUPPORTED_EVENTS = [
+  'render',
+  'click',
+  'contextmenu',
+  'copy',
+  'cut',
+  'dblclick',
+  'drag',
+  'dragend',
+  'dragenter',
+  'dragexit',
+  'dragleave',
+  'dragover',
+  'dragstart',
+  'drop',
+  'durationchange',
+  'focus',
+  'focusin',
+  'focusout',
+  'keydown',
+  'keypress',
+  'keyup',
+  'mousedown',
+  'mouseenter',
+  'mouseleave',
+  'mousemove',
+  'mouseout',
+  'mouseover',
+  'mouseup',
+  'paste',
+  'resize',
+  'scroll',
+  'wheel',
+];
 
-const sideStyleStringToObject = (style) => {
+const styleStringToObject = (style) => {
   const array = style
     .replace(/px/g, '')
     .split(' ')
@@ -60,6 +90,7 @@ class Chart {
    * @param {Object} options
    */
   constructor(id, parent, options) {
+    this.eventListeners = [];
     this.id = id;
 
     this.parent = parent;
@@ -76,14 +107,13 @@ class Chart {
     this.bindListenersAndHandlers();
 
     if (options?.data) {
-      this.data = [...options.data];
+      this.data = { ...options.data };
     } else {
       this.data = { x: [], y: [] };
       /**@type {Rectangle} */
       this.limits = { x: [0, 0], y: [0, 0] };
     }
     this.cull = options?.cull ? options.cull : false;
-    console.log(this.cull);
     this.axes = {
       x: new Axis(this.chart, this.id, 'x', {
         label: 'Time[min]',
@@ -127,6 +157,9 @@ class Chart {
     this.handleMouseUp_Axis = axisMouseHandlers.handleMouseUp_Axis.bind(this);
     this.handleWheel_Axis = axisMouseHandlers.handleWheel_Axis.bind(this);
 
+    this.handleMouseDown_Integrate =
+      integrateMouseHandlers.handleMouseDown_Integrate.bind(this);
+
     this.render = this.render.bind(this);
     window.addEventListener('focus', this.render);
 
@@ -135,8 +168,8 @@ class Chart {
   }
   updateDimensions() {
     const style = window.getComputedStyle(this.chart);
-    this.margin = sideStyleStringToObject(style.margin);
-    this.padding = sideStyleStringToObject(style.padding);
+    this.margin = styleStringToObject(style.margin);
+    this.padding = styleStringToObject(style.padding);
     this.width = this.parent.offsetWidth;
     this.height = this.parent.offsetHeight;
     this.chart.setAttribute(
@@ -189,12 +222,13 @@ class Chart {
    * @param {Rectangle} newLimits
    * @returns
    */
-  setLimits(newLimits, animate = false) {
+  setLimits(newLimits, animate = false, triggerRenderEvent = true) {
     const [, xExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     const [, yExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     if (xExponent < -10 || yExponent < -10) return;
     /**@type {Rectangle} */
     this.limits = { ...newLimits };
+    this.triggerRenderEvent = triggerRenderEvent;
     if (!animate) {
       this.render();
       return;
@@ -205,8 +239,8 @@ class Chart {
   }
   resetLimits() {
     const baseLimits = {
-      x: [this.data[0].x[0], this.data[0].x[this.data[0].x.length - 1]],
-      y: [Math.min(...this.data[0].y), Math.max(...this.data[0].y)],
+      x: [this.data.x[0], this.data.x[this.data.x.length - 1]],
+      y: [Math.min(...this.data.y), Math.max(...this.data.y)],
     };
     const pads = {
       x: (baseLimits.x[1] - baseLimits.x[0]) * 0.01,
@@ -222,11 +256,11 @@ class Chart {
    * @returns {Rectangle}
    */
   fullYScale() {
-    const start = this.data[0].x.findIndex((e) => e >= this.limits.x[0]);
-    const end = this.data[0].x.findIndex((e) => e > this.limits.x[1]);
+    const start = this.data.x.findIndex((e) => e >= this.limits.x[0]);
+    const end = this.data.x.findIndex((e) => e > this.limits.x[1]);
 
     if (start == end) return;
-    const filter = this.data[0].y.slice(start, end);
+    const filter = this.data.y.slice(start, end);
     const baseLimits = [Math.min(...filter), Math.max(...filter)];
     const pad = (baseLimits[1] - baseLimits[0]) * 0.01;
     return {
@@ -239,10 +273,7 @@ class Chart {
    * @returns {Rectangle}
    */
   fullXScale() {
-    const baseLimits = [
-      this.data[0].x[0],
-      this.data[0].x[this.data[0].x.length - 1],
-    ];
+    const baseLimits = [this.data.x[0], this.data.x[this.data.x.length - 1]];
     const pad = (baseLimits[1] - baseLimits[0]) * 0.01;
     return {
       x: [baseLimits[0] - pad, baseLimits[1] + pad],
@@ -295,22 +326,6 @@ class Chart {
     if (onAxis) this.handleWheel_Axis(event, onAxis);
   }
 
-  handleMouseDown_Integrate(event) {
-    const click = xform.transform2D(
-      {
-        x: event.offsetX - this.plotDimensions.left,
-        y: event.offsetY - this.plotDimensions.top,
-      },
-      { x: [0, this.plotDimensions.width], y: [this.plotDimensions.height, 0] },
-      this.limits
-    );
-    this.integrals.push({
-      x: [click.x, click.x + 0.1],
-      y: [click.y, click.y + 1],
-    });
-    this.render();
-  }
-
   /**
    * Convert a coordinate in the chart area to a Plot Scaled value
    * @param {Point} point xy coordinates based on the total chart size
@@ -318,8 +333,8 @@ class Chart {
    */
   chartScreenCoordinateToPlotCoordinate(point) {
     const offsetPlotCoords = {
-      x: point.x - this.plotDimensions.left,
-      y: point.y - this.plotDimensions.top,
+      x: point.x - this.plotDimensions.left - this.padding.left,
+      y: point.y - this.plotDimensions.top - this.padding.top,
     };
     const source = {
       x: [0, this.plotDimensions.width],
@@ -327,13 +342,18 @@ class Chart {
     };
     return xform.transform2D(offsetPlotCoords, source, this.limits);
   }
-
+  clickToPlotCoordinate(event) {
+    return this.chartScreenCoordinateToPlotCoordinate({
+      x: event.offsetX,
+      y: event.offsetY,
+    });
+  }
   /**
    * Render the Chart
    */
   render() {
     this.readyForAnimationFrame = false;
-    console.time(`${this.id} render`);
+    //console.time(`${this.id} render`);
 
     this.updateDimensions();
     const xAxisPad = this.axes.x.getDimension(
@@ -355,7 +375,7 @@ class Chart {
     this.plot.render(
       this.limits,
       this.plotDimensions,
-      this.data[0],
+      this.data,
       this.integrals,
       this.cull
     );
@@ -364,14 +384,16 @@ class Chart {
 
     this.readyForAnimationFrame = true;
 
-    if (this.onrender)
+    if (this.onrender && this.triggerRenderEvent) {
+      this.triggerRenderEvent = true;
       this.onrender({
         target: this.chart,
         limits: this.limits,
         plotDimensions: this.plotDimensions,
         integrals: this.integrals,
       });
-    console.timeEnd(`${this.id} render`);
+    }
+    // console.timeEnd(`${this.id} render`);
   }
   /**
    * Save the SVG Plot
@@ -384,10 +406,40 @@ class Chart {
    *
    * @param {*} callback
    */
+
   addEventListener(type, callback) {
-    if (type == 'onrender') {
-      this.onrender = callback;
+    if (!SUPPORTED_EVENTS.includes(type)) return;
+    console.log(this.id, type);
+    switch (type) {
+      case 'render':
+        this.onrender = callback;
+        return;
+      default:
+        this.eventListeners.push({
+          type,
+          originalCallback: callback,
+          callback: ((event) => {
+            event.onAxis = this.eventOnAxis(event);
+            callback(event);
+          }),
+        });
+
+        this.chart.addEventListener(
+          type,
+          this.eventListeners[this.eventListeners.length - 1].callback
+        );
     }
+  }
+  removeEventListener(type, callback) {
+    const index = this.eventListeners.findIndex(
+      (element) => element.type == type && element.originalCallback == callback
+    );
+    if (index == -1) return;
+    this.chart.removeEventListener(
+      'click',
+      this.eventListeners[index].callback
+    );
+    this.eventListeners.splice(index, 1);
   }
 }
 
