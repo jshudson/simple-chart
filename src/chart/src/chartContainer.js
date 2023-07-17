@@ -4,17 +4,18 @@ export default class ChartContainer {
    *
    * @param {HTMLElement} parent
    */
-  constructor(parent) {
+  constructor(id, parent) {
     this.parent = parent;
 
     this.data = [];
     this.charts = [];
+    this.id = id;
   }
   addData(data) {
     this.data.push(data);
     const newContainer = this.parent.appendChild(document.createElement('div'));
     newContainer.setAttribute('class', 'graph');
-    const newChart = new Chart(String(this.data.length - 1), newContainer, {
+    const newChart = new Chart(this.id+String(this.data.length - 1), newContainer, {
       data: data,
       cull: true,
     });

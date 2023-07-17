@@ -2,6 +2,7 @@
 import exported from './data.js';
 const { data, data2 } = exported;
 
+import SplitDiv from './src/splitDiv/src/splitDiv.js';
 import ChartContainer from './src/chart/src/chartContainer.js';
 
 import Chart from './src/chart/index.js';
@@ -63,11 +64,17 @@ const points = xyToObject(data);
 // chart.addEventListener('onrender', (event) => {
 //   chart2.setLimits(event.limits, true);
 // });
-let container = new ChartContainer(document.getElementById('graph'))
-container.addData(points);
-container.addData(points);
-container.addData(points);
-container.addData(points);
+
+let splitDiv = new SplitDiv(document.getElementById('graph'),'horizontal')
+// let container = new ChartContainer('first',splitDiv.containers[0])
+// container.addData(points);
+
+
+let container2 = new ChartContainer('second',splitDiv.containers[1])
+container2.addData(points);
+// container2.addData(points);
+// container2.addData(points);
+// container2.addData(points);
 
 /**
  * Gets styles by a classname

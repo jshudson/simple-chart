@@ -30,7 +30,7 @@ svg text {
   resize: vertical;
   overflow: hidden;
   outline: 1px solid orange;
-  margin-left: 100px;
+  /* margin-left: 100px; */
   /* width: 100%; */
 }
 

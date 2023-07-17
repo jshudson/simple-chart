@@ -154,6 +154,7 @@ class Plot {
     return this.group;
   }
   render(limits, dimensions, points, integrals, cull = false) {
+    
     if (this.group) this.group.remove();
 
     const targetRect = {
@@ -169,6 +170,7 @@ class Plot {
 
     const pathElement = this.addPath();
     let scaledPoints = xform.transformXYObj(points, limits, targetRect);
+
     if (cull) scaledPoints = this.cull(scaledPoints, dimensions.width);
 
     const scaledIntegrals = integrals.map((e) => {

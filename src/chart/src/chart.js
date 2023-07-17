@@ -165,11 +165,16 @@ class Chart {
 
     const parentResizeObserver = new ResizeObserver(this.render);
     parentResizeObserver.observe(this.parent);
+    const mutation = new MutationObserver((list,observer)=>{console.log(list)})
+    mutation.observe(this.parent,{attributes:true})
   }
   updateDimensions() {
     const style = window.getComputedStyle(this.chart);
     this.margin = styleStringToObject(style.margin);
     this.padding = styleStringToObject(style.padding);
+    console.log('width', this.parent.offsetWidth);
+    this.chart.setAttribute('width', '0');
+    this.chart.setAttribute('height', '0');
     this.width = this.parent.offsetWidth;
     this.height = this.parent.offsetHeight;
     this.chart.setAttribute(
@@ -352,9 +357,9 @@ class Chart {
    * Render the Chart
    */
   render() {
+    console.log('render')
     this.readyForAnimationFrame = false;
     //console.time(`${this.id} render`);
-
     this.updateDimensions();
     const xAxisPad = this.axes.x.getDimension(
       this.plotDimensions,
@@ -418,10 +423,10 @@ class Chart {
         this.eventListeners.push({
           type,
           originalCallback: callback,
-          callback: ((event) => {
+          callback: (event) => {
             event.onAxis = this.eventOnAxis(event);
             callback(event);
-          }),
+          },
         });
 
         this.chart.addEventListener(
