@@ -45,18 +45,18 @@ const points = xyToObject(data);
 //   cull: true,
 // });
 
-// const test = await fetch('./119188-3.csv');
-// const testData = await test.text();
-// let points2;
-// Papa.parse(testData, {
-//   dynamicTyping: true,
-//   skipEmptyLines: true,
-//   complete: function (results) {
-//     console.log(results.data);
-//     const newData = results.data.slice(4, results.data.length);
-//     points2 = xyToObject(newData);
-//   },
-// });
+const test = await fetch('./119188-3.csv');
+const testData = await test.text();
+let points2;
+Papa.parse(testData, {
+  dynamicTyping: true,
+  skipEmptyLines: true,
+  complete: function (results) {
+    console.log(results.data);
+    const newData = results.data.slice(4, results.data.length);
+    points2 = xyToObject(newData);
+  },
+});
 
 // let chart2 = new Chart('2', document.getElementById('graph2'), {
 //   data: points2,
@@ -66,15 +66,15 @@ const points = xyToObject(data);
 // });
 
 let splitDiv = new SplitDiv(document.getElementById('graph'),'horizontal')
-// let container = new ChartContainer('first',splitDiv.containers[0])
-// container.addData(points);
+let container = new ChartContainer('first',splitDiv.containers[0])
+container.addData(points);
 
 
 let container2 = new ChartContainer('second',splitDiv.containers[1])
+container2.addData(points2);
+container2.addData(points2);
 container2.addData(points);
-// container2.addData(points);
-// container2.addData(points);
-// container2.addData(points);
+container2.addData(points);
 
 /**
  * Gets styles by a classname

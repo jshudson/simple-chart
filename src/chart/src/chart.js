@@ -172,9 +172,9 @@ class Chart {
     const style = window.getComputedStyle(this.chart);
     this.margin = styleStringToObject(style.margin);
     this.padding = styleStringToObject(style.padding);
-    console.log('width', this.parent.offsetWidth);
     this.chart.setAttribute('width', '0');
     this.chart.setAttribute('height', '0');
+    console.log('height', this.parent.offsetHeight);
     this.width = this.parent.offsetWidth;
     this.height = this.parent.offsetHeight;
     this.chart.setAttribute(
@@ -357,7 +357,7 @@ class Chart {
    * Render the Chart
    */
   render() {
-    console.log('render')
+    console.log(this.id, 'render')
     this.readyForAnimationFrame = false;
     //console.time(`${this.id} render`);
     this.updateDimensions();

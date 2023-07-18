@@ -24,14 +24,14 @@ export default class SplitDiv {
     );
 
     this.first = this.container.appendChild(document.createElement('div'));
-    this.first.setAttribute('class', 'split-div-first');
+    this.first.setAttribute('class', 'split-div-child split-div-first');
 
     this.bar = this.container.appendChild(document.createElement('div'));
 
     this.bar.setAttribute('class', `split-div-bar ${barDirectionCSS}`);
 
     this.second = this.container.appendChild(document.createElement('div'));
-    this.second.setAttribute('class', `split-div-second`);
+    this.second.setAttribute('class', `split-div-child split-div-second`);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
@@ -49,17 +49,15 @@ export default class SplitDiv {
   handleMouseMove(e) {
     e.preventDefault();
     const bounds = this.container.getBoundingClientRect();
+    const barSize = this.bar.getBoundingClientRect()[this.size];
     const position =
       this.direction == 'horizontal'
-        ? e.pageX - bounds.left
-        : e.pageY - bounds.top;
-    const clamped = clamp(
-      position,
-      100,
-      bounds[this.size] - 100 - this.bar.getBoundingClientRect()[this.size]
-    );
+        ? e.pageX - bounds.left - barSize/2
+        : e.pageY - bounds.top - barSize/2;
+    const clamped = clamp(position, 100, bounds[this.size] - 100 - barSize);
     this.first.style[this.size] = `${clamped}px`;
-    // this.second.style[this.size] = '0px';
+
+    this.second.style[this.size] = `${bounds[this.size] - barSize - clamped}px`;
   }
   handleMouseUp(e) {
     document.removeEventListener('mousemove', this.handleMouseMove);

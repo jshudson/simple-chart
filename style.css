@@ -5,8 +5,8 @@
 
 svg {
   outline: 1px solid black;
-  padding: 10px 50px;
-  margin: 10px;
+  padding: 10px 10px;
+  /* margin: 10px; */
   box-sizing: content-box;
 }
 
@@ -24,14 +24,19 @@ svg text {
   fill: var(--plot1Fill);
 }
 
+#graph {
+  height: calc(100vh - 50px);
+}
+.chartContainer {
+  display: grid;
+  grid-auto-rows: 1fr;
+  height: 100%;
+}
+
 .graph {
-  height: 300px;
-  max-height: 1000px;
-  resize: vertical;
   overflow: hidden;
   outline: 1px solid orange;
-  /* margin-left: 100px; */
-  /* width: 100%; */
+
 }
 
 .plot {

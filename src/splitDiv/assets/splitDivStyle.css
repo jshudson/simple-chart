@@ -1,8 +1,7 @@
 .split-div-container {
   display: grid;
   height: 100%;
-  margin-left: 0px;
-  width: 1000px;
+  /* margin-left: 0px; */
   overflow: hidden;
 }
 .split-div-horizontal {
@@ -10,6 +9,10 @@
 }
 .split-div-vertical {
   grid-template-rows: auto 8px 1fr;
+}
+.split-div-child {
+  min-width: 100px;
+  min-height: 100px;
 }
 .split-div-first {
   background-color: aliceblue;
