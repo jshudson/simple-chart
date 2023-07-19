@@ -56,8 +56,8 @@ export function rect(x, y, width, height, attributes) {
     ...attributes,
     x,
     y,
-    width,
-    height,
+    width: Math.max(0,width),
+    height: Math.max(0,height),
   };
   const element = newElement('rect', combinedAttributes);
   return element;

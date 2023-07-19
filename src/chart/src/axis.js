@@ -93,8 +93,8 @@ class Axis {
         ...attributes,
         x: axisScreenCoords.x[0],
         y: 0,
-        width: axisScreenCoords.x[1] - axisScreenCoords.x[0],
-        height: dimension,
+        width: Math.max(axisScreenCoords.x[1] - axisScreenCoords.x[0]),
+        height: Math.max(dimension),
         class: 'scroll-drag-horiz',
       };
     } else {
@@ -102,8 +102,8 @@ class Axis {
         ...attributes,
         x: -dimension,
         y: axisScreenCoords.y[1],
-        width: dimension,
-        height: axisScreenCoords.y[0] - axisScreenCoords.y[1],
+        width: Math.max(0,dimension),
+        height: Math.max(0,axisScreenCoords.y[0] - axisScreenCoords.y[1]),
         class: 'scroll-drag-vert',
       };
     }

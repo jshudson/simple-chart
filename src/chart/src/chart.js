@@ -133,6 +133,7 @@ class Chart {
     this.interactionMode = 'zoom';
 
     this.readyForAnimationFrame = true;
+    this.updateDimensions();
     if (this.data) this.resetLimits();
   }
   bindListenersAndHandlers() {
@@ -161,12 +162,15 @@ class Chart {
       integrateMouseHandlers.handleMouseDown_Integrate.bind(this);
 
     this.render = this.render.bind(this);
+    this.resizeRender = this.resizeRender.bind(this);
     window.addEventListener('focus', this.render);
 
-    const parentResizeObserver = new ResizeObserver(this.render);
+    const parentResizeObserver = new ResizeObserver(this.resizeRender);
     parentResizeObserver.observe(this.parent);
-    const mutation = new MutationObserver((list,observer)=>{console.log(list)})
-    mutation.observe(this.parent,{attributes:true})
+    const mutation = new MutationObserver((list, observer) => {
+      console.log(list);
+    });
+    mutation.observe(this.parent, { attributes: true });
   }
   updateDimensions() {
     const style = window.getComputedStyle(this.chart);
@@ -174,7 +178,6 @@ class Chart {
     this.padding = styleStringToObject(style.padding);
     this.chart.setAttribute('width', '0');
     this.chart.setAttribute('height', '0');
-    console.log('height', this.parent.offsetHeight);
     this.width = this.parent.offsetWidth;
     this.height = this.parent.offsetHeight;
     this.chart.setAttribute(
@@ -185,7 +188,7 @@ class Chart {
             this.padding.right +
             this.margin.left +
             this.padding.left)
-      )
+      ) + 'px'
     );
     this.chart.setAttribute(
       'height',
@@ -195,7 +198,7 @@ class Chart {
             this.padding.top +
             this.margin.bottom +
             this.padding.bottom)
-      )
+      ) + 'px'
     );
 
     this.frame = {
@@ -222,6 +225,18 @@ class Chart {
   setMode(mode) {
     this.interactionMode = mode;
   }
+  getPadding(limits) {
+    const plotPadding = {
+      x: xform.relativeOffset1D(10, 0, this.plotDimensions.width, ...limits.x),
+      y: xform.relativeOffset1D(10, 0, this.plotDimensions.height, ...limits.y),
+    };
+    /**@type {Rectangle} */
+    const paddedLimits = {
+      x: [limits.x[0] - plotPadding.x, limits.x[1] + plotPadding.x],
+      y: [limits.y[0] - plotPadding.y, limits.y[1] + plotPadding.y],
+    };
+    return paddedLimits;
+  }
   /**
    *
    * @param {Rectangle} newLimits
@@ -247,14 +262,12 @@ class Chart {
       x: [this.data.x[0], this.data.x[this.data.x.length - 1]],
       y: [Math.min(...this.data.y), Math.max(...this.data.y)],
     };
-    const pads = {
-      x: (baseLimits.x[1] - baseLimits.x[0]) * 0.01,
-      y: (baseLimits.y[1] - baseLimits.y[0]) * 0.01,
-    };
+
     this.setLimits({
-      x: [baseLimits.x[0] - pads.x, baseLimits.x[1] + pads.x],
-      y: [baseLimits.y[0] - pads.y, baseLimits.y[1] + pads.y],
+      x: [baseLimits.x[0], baseLimits.x[1]],
+      y: [baseLimits.y[0], baseLimits.y[1]],
     });
+    console.log('reset', this.limits, this.paddedLimits);
   }
   /**
    *
@@ -267,10 +280,9 @@ class Chart {
     if (start == end) return;
     const filter = this.data.y.slice(start, end);
     const baseLimits = [Math.min(...filter), Math.max(...filter)];
-    const pad = (baseLimits[1] - baseLimits[0]) * 0.01;
     return {
       x: [...this.limits.x],
-      y: [baseLimits[0] - pad, baseLimits[1] + pad],
+      y: [baseLimits[0], baseLimits[1]],
     };
   }
   /**
@@ -279,9 +291,9 @@ class Chart {
    */
   fullXScale() {
     const baseLimits = [this.data.x[0], this.data.x[this.data.x.length - 1]];
-    const pad = (baseLimits[1] - baseLimits[0]) * 0.01;
+
     return {
-      x: [baseLimits[0] - pad, baseLimits[1] + pad],
+      x: [baseLimits[0], baseLimits[1]],
       y: [...this.limits.y],
     };
   }
@@ -353,21 +365,28 @@ class Chart {
       y: event.offsetY,
     });
   }
+  resizeRender() {
+    console.log(this.id);
+    this.updateDimensions();
+    this.setLimits(this.limits, true, false);
+    if (this.id == 'second3') console.log(this.limits, this.paddedLimits);
+  }
   /**
    * Render the Chart
    */
   render() {
-    console.log(this.id, 'render')
     this.readyForAnimationFrame = false;
     //console.time(`${this.id} render`);
     this.updateDimensions();
+    this.paddedLimits = this.getPadding(this.limits);
+
     const xAxisPad = this.axes.x.getDimension(
       this.plotDimensions,
-      this.limits.x
+      this.paddedLimits.x
     );
     const yAxisPad = this.axes.y.getDimension(
       this.plotDimensions,
-      this.limits.y
+      this.paddedLimits.y
     );
 
     this.plotDimensions = {
@@ -378,14 +397,14 @@ class Chart {
     };
 
     this.plot.render(
-      this.limits,
+      this.paddedLimits,
       this.plotDimensions,
       this.data,
       this.integrals,
       this.cull
     );
-    this.axes.x.render(this.plotDimensions, this.limits.x);
-    this.axes.y.render(this.plotDimensions, this.limits.y);
+    this.axes.x.render(this.plotDimensions, this.paddedLimits.x);
+    this.axes.y.render(this.plotDimensions, this.paddedLimits.y);
 
     this.readyForAnimationFrame = true;
 

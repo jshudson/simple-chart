@@ -8,6 +8,7 @@ class Plot {
     this.parent = parent;
   }
   addGroup(dimensions) {
+
     this.group = this.parent.appendChild(
       svg.newElement('g', {
         id: `${this.id}-plot`,

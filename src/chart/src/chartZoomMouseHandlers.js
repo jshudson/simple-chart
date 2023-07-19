@@ -65,7 +65,7 @@ export function handleMouseUp_Zoom() {
       x: [0, this.plotDimensions.width],
       y: [this.plotDimensions.height, 0],
     },
-    this.limits
+    this.paddedLimits
   );
   newLimits.y = newLimits.y.toSorted((a, b) => a - b);
   this.setLimits(newLimits);

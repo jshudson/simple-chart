@@ -27,9 +27,6 @@ export default class ChartContainer {
       }
     );
 
-    // chart.addEventListener('onrender', (event) => {
-    //   chart2.setLimits(event.limits, true);
-    // });
     this.charts.push(newChart);
     this.charts.forEach((chart) => {
       chart.addEventListener('render', (event) => {

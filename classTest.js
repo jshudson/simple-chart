@@ -1,6 +1,6 @@
 //@ts-nocheck
 import exported from './data.js';
-const { data, data2 } = exported;
+const { data } = exported;
 
 import SplitDiv from './src/splitDiv/src/splitDiv.js';
 import ChartContainer from './src/chart/src/chartContainer.js';
@@ -29,8 +29,7 @@ fileInput.onchange = () => {
     complete: function (results) {
       const data3 = results.data.slice(4, results.data.length);
       const points = xyToObject(data3);
-      chart.data = { ...points };
-      chart.resetLimits();
+      container.addData({ ...points });
     },
   });
 };
@@ -39,11 +38,6 @@ const xyToObject = (data) => {
   return { x: data.map((x) => x[0]), y: data.map((y) => y[1]) };
 };
 const points = xyToObject(data);
-
-// let chart = new Chart('1', document.getElementById('graph'), {
-//   data: points,
-//   cull: true,
-// });
 
 const test = await fetch('./119188-3.csv');
 const testData = await test.text();
@@ -58,23 +52,17 @@ Papa.parse(testData, {
   },
 });
 
-// let chart2 = new Chart('2', document.getElementById('graph2'), {
-//   data: points2,
-// });
-// chart.addEventListener('onrender', (event) => {
-//   chart2.setLimits(event.limits, true);
-// });
 
-let splitDiv = new SplitDiv(document.getElementById('graph'),'horizontal')
+let splitDiv = new SplitDiv(document.getElementById('graph'),'vertical')
 let container = new ChartContainer('first',splitDiv.containers[0])
-container.addData(points);
+// container.addData(points);
 
 
 let container2 = new ChartContainer('second',splitDiv.containers[1])
-container2.addData(points2);
-container2.addData(points2);
-container2.addData(points);
-container2.addData(points);
+// container2.addData(points2);
+// container2.addData(points2);
+// container2.addData(points);
+// container2.addData(points);
 
 /**
  * Gets styles by a classname
