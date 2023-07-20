@@ -21,6 +21,9 @@ class Axis {
     this.label = options?.label || 'Units';
     this.visible = options?.visible == undefined ? true : options.visible;
   }
+  updateID(id) {
+    this.id = `${id}-${this.direction}-axis`;
+  }
   /**
    * Get the margin dimensions taken up by the axis for a certain range
    * @param {ScreenDimensions} plotDimensions
@@ -102,8 +105,8 @@ class Axis {
         ...attributes,
         x: -dimension,
         y: axisScreenCoords.y[1],
-        width: Math.max(0,dimension),
-        height: Math.max(0,axisScreenCoords.y[0] - axisScreenCoords.y[1]),
+        width: Math.max(0, dimension),
+        height: Math.max(0, axisScreenCoords.y[0] - axisScreenCoords.y[1]),
         class: 'scroll-drag-vert',
       };
     }

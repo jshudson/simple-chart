@@ -136,6 +136,14 @@ class Chart {
     this.updateDimensions();
     if (this.data) this.resetLimits();
   }
+  updateID(id) {
+    this.id = id;
+    this.chart.setAttribute('id', this.id);
+    this.axes.x.updateID(this.id);
+    this.axes.y.updateID(this.id);
+    this.plot.updateID(this.id);
+    this.render();
+  }
   bindListenersAndHandlers() {
     this.chart.oncontextmenu = (e) => {
       return false;
@@ -165,12 +173,8 @@ class Chart {
     this.resizeRender = this.resizeRender.bind(this);
     window.addEventListener('focus', this.render);
 
-    const parentResizeObserver = new ResizeObserver(this.resizeRender);
-    parentResizeObserver.observe(this.parent);
-    const mutation = new MutationObserver((list, observer) => {
-      console.log(list);
-    });
-    mutation.observe(this.parent, { attributes: true });
+    this.parentResizeObserver = new ResizeObserver(this.resizeRender);
+    this.parentResizeObserver.observe(this.parent);
   }
   updateDimensions() {
     const style = window.getComputedStyle(this.chart);
@@ -366,7 +370,7 @@ class Chart {
     });
   }
   resizeRender() {
-    console.log(this.id);
+    console.log('resize observer', this.id);
     this.updateDimensions();
     this.setLimits(this.limits, true, false);
     if (this.id == 'second3') console.log(this.limits, this.paddedLimits);
@@ -459,11 +463,15 @@ class Chart {
       (element) => element.type == type && element.originalCallback == callback
     );
     if (index == -1) return;
-    this.chart.removeEventListener(
-      'click',
-      this.eventListeners[index].callback
-    );
+    this.chart.removeEventListener(type, this.eventListeners[index].callback);
     this.eventListeners.splice(index, 1);
+  }
+  remove() {
+    this.eventListeners.forEach(({ type, callback }) => {
+      this.chart.removeEventListener(type, callback);
+    });
+    this.parentResizeObserver.unobserve(this.parent);
+    this.chart.remove();
   }
 }
 

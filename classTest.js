@@ -21,7 +21,8 @@ checkBox.onchange = (event) => {
   chart.setMode(event.target.checked ? 'integrate' : 'zoom');
 };
 
-fileInput.onchange = () => {
+fileInput.onchange = (e) => {
+  if (e.target.files.length < 1) return;
   const file = fileInput.files[0];
   Papa.parse(file, {
     dynamicTyping: true,
@@ -32,6 +33,7 @@ fileInput.onchange = () => {
       container.addData({ ...points });
     },
   });
+  e.target.value = '';
 };
 
 const xyToObject = (data) => {
@@ -52,13 +54,11 @@ Papa.parse(testData, {
   },
 });
 
-
-let splitDiv = new SplitDiv(document.getElementById('graph'),'vertical')
-let container = new ChartContainer('first',splitDiv.containers[0])
+let splitDiv = new SplitDiv(document.getElementById('graph'), 'vertical');
+let container = new ChartContainer('first', splitDiv.containers[0]);
 // container.addData(points);
 
-
-let container2 = new ChartContainer('second',splitDiv.containers[1])
+let container2 = new ChartContainer('second', splitDiv.containers[1]);
 // container2.addData(points2);
 // container2.addData(points2);
 // container2.addData(points);

@@ -2,16 +2,19 @@ import * as svg from './svgUtils.js';
 import * as xform from './coordinateTransfer.js';
 class Plot {
   constructor(parent, id, options) {
-    this.id = id;
+    this.id = `${id}-plot`;
 
     // parent is the root svg
     this.parent = parent;
+  }
+  updateID(id){
+    this.id = `${id}-plot`
   }
   addGroup(dimensions) {
 
     this.group = this.parent.appendChild(
       svg.newElement('g', {
-        id: `${this.id}-plot`,
+        id: this.id,
         transform: `translate(${dimensions.left},${dimensions.top})`,
       })
     );
@@ -34,7 +37,7 @@ class Plot {
   addPath() {
     return this.group.appendChild(
       svg.newElement('path', {
-        id: this.id + '-plot',
+        id: this.id + '-path',
         class: 'plot',
         'clip-path': `url(#${this.id}-clip-path)`,
       })
@@ -155,7 +158,7 @@ class Plot {
     return this.group;
   }
   render(limits, dimensions, points, integrals, cull = false) {
-    
+    console.log(this.id)
     if (this.group) this.group.remove();
 
     const targetRect = {

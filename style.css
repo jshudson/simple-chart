@@ -35,6 +35,7 @@ svg text {
 
 .graph {
   overflow: hidden;
+  position: relative;
   /* outline: 1px solid orange; */
 }
 .chartContainer {
@@ -43,7 +44,21 @@ svg text {
   height: 100%;
   background-color: white;
 }
-
+.chart-container-close {
+  position: absolute;
+  font-size: 1.0em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  width: 20px;
+  height: 20px;
+  top: 5px;
+  right: 5px;
+  opacity: 10%;
+}
+.chart-container-close:hover {
+  opacity: 100%;
+}
 .plot {
   fill: none;
   stroke: var(--plot1);

@@ -6,48 +6,65 @@ export default class ChartContainer {
    */
   constructor(id, parent) {
     this.parent = parent;
-    this.container = this.parent.appendChild(document.createElement('div'));
-    this.container.setAttribute('class', 'chartContainer');
+
     this.data = [];
     this.charts = [];
     this.id = id;
+    this.addContainer();
+  }
+  addContainer() {
+    this.container = this.parent.appendChild(document.createElement('div'));
+    this.container.setAttribute('class', 'chartContainer');
   }
   addData(data) {
-    this.data.push(data);
+    const newId = `${this.id}-${this.charts.length}`;
+
     const newContainer = this.container.appendChild(
       document.createElement('div')
     );
     newContainer.setAttribute('class', 'graph');
-    const newChart = new Chart(
-      this.id + String(this.data.length - 1),
-      newContainer,
-      {
-        data: data,
-        cull: true,
-      }
-    );
+    newContainer.setAttribute('id', `container-${newId}`);
 
-    this.charts.push(newChart);
-    this.charts.forEach((chart) => {
+    const close = document.createElement('input');
+    close.setAttribute('type', 'button');
+    close.setAttribute('value', '×');
+    close.setAttribute('class', 'chart-container-close');
+
+    close.onclick = (e) => {
+      const index = Number(
+        close.parentElement.id.replace(`container-${this.id}`, '')
+      );
+      console.log(index)
+      this.charts[index].chart.remove();
+      close.parentElement.remove();
+      this.charts.splice(index, 1);
+      this.charts.forEach(({ container, chart }, i) => {
+        container.setAttribute('id', `container-${this.id}-${i}`);
+        chart.updateID(`${this.id}${i}`);
+      });
+    };
+    newContainer.appendChild(close);
+
+    const newChart = new Chart(`chart-${newId}`, newContainer, {
+      data: data,
+      cull: true,
+    });
+
+    this.charts.push({ container: newContainer, chart: newChart, data });
+    this.charts.forEach(({ chart }) => {
       chart.addEventListener('render', (event) => {
-        this.charts.forEach((chart) => {
+        this.charts.forEach(({ chart }) => {
           if (chart.id != event.target.id) {
             chart.setLimits(event.limits, true, false);
           }
         });
       });
     });
-    const afunction = (e) => {
-      console.log(e);
-    };
-    if (this.charts.length == 1) {
-      this.charts[0].addEventListener('click', afunction);
-      this.charts[0].removeEventListener('click', afunction);
-    }
   }
   render() {
-    this.data.forEach((data, i) => {
-      this.charts[i].render;
+    console.log('rendering');
+    this.charts.forEach(({ chart }) => {
+      chart.chart.render;
     });
   }
 }
