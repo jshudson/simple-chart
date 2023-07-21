@@ -36,7 +36,7 @@ svg text {
 .graph {
   overflow: hidden;
   position: relative;
-  border: 1px solid orange;
+  /* border: 1px solid orange; */
   /* outline: 1px solid orange; */
 }
 .chartContainer {

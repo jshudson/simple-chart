@@ -23,15 +23,17 @@ checkBox.onchange = (event) => {
 
 fileInput.onchange = (e) => {
   if (e.target.files.length < 1) return;
-  const file = fileInput.files[0];
-  Papa.parse(file, {
-    dynamicTyping: true,
-    skipEmptyLines: true,
-    complete: function (results) {
-      const data3 = results.data.slice(4, results.data.length);
-      const points = xyToObject(data3);
-      container.addData({ ...points });
-    },
+  Array.from(fileInput.files).forEach((file) => {
+    if (file.type != 'text/csv') return;
+    Papa.parse(file, {
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const data3 = results.data.slice(4, results.data.length);
+        const points = xyToObject(data3);
+        container.addData({ ...points });
+      },
+    });
   });
   e.target.value = '';
 };
