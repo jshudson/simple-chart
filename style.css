@@ -36,9 +36,12 @@ svg text {
 .graph {
   overflow: hidden;
   position: relative;
+  border: 1px solid orange;
   /* outline: 1px solid orange; */
 }
 .chartContainer {
+  margin: 0;
+  padding: 0;
   display: grid;
   grid-auto-rows: 1fr;
   height: 100%;
@@ -59,9 +62,27 @@ svg text {
 .chart-container-close:hover {
   opacity: 100%;
 }
+ul .plot {
+  stroke: var(--plot1);
+}
+ul>li:nth-child(2) .plot {
+  stroke: purple;
+}
+ul>li:nth-child(3) .plot {
+  stroke: green;
+}
+ul>li:nth-child(4) .plot {
+  stroke: goldenrod;
+}
+ul>li:nth-child(5) .plot {
+  stroke: maroon;
+}
+ul>li:nth-child(6) .plot {
+  stroke: midnightblue;
+}
 .plot {
   fill: none;
-  stroke: var(--plot1);
+  /* stroke: var(--plot1); */
   stroke-width: 1pt;
   stroke-linejoin: round;
 }
