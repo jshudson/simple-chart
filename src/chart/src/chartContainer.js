@@ -10,62 +10,75 @@ export default class ChartContainer {
     this.charts = [];
     this.id = id;
     this.mode = 'normalized';
+    this.handleRender = this.handleRender.bind(this);
+    this.handleCloseClick = this.handleCloseClick;
     this.addContainer();
   }
   addContainer() {
     this.container = this.parent.appendChild(document.createElement('ul'));
     this.container.setAttribute('class', 'chartContainer');
   }
-  setMode(mode) {}
+  setMode(mode) {
+    // this.mode = mode;
+  }
+  handleRender(event) {
+    this.charts.forEach(({ chart }) => {
+      if (chart.id != event.target.id) {
+        chart.setLimits(event.limits, true, false);
+      }
+    });
+  }
+  handleCloseClick(event) {
+    /*bound to object:
+      {
+        class: this,
+        container: newContainer,
+        chart: newChart,
+        index: this.charts.length,
+      }*/
+    console.log(this);
+    this.class.render();
+  }
   addData(data) {
     const newId = `${this.id}-${this.charts.length}`;
 
     const newContainer = this.container.appendChild(
       document.createElement('li')
     );
+
     newContainer.setAttribute('class', 'graph');
     newContainer.setAttribute('id', `container-${newId}`);
 
     const close = document.createElement('input');
+
     close.setAttribute('type', 'button');
     close.setAttribute('value', '×');
     close.setAttribute('class', 'chart-container-close');
 
-    close.onclick = (e) => {
-      const index = Number(
-        close.parentElement.id.replace(`container-${this.id}`, '')
-      );
-      console.log(index);
-      this.charts[index].chart.remove();
-      close.parentElement.remove();
-      this.charts.splice(index, 1);
-      this.charts.forEach(({ container, chart }, i) => {
-        container.setAttribute('id', `container-${this.id}-${i}`);
-        chart.updateID(`${this.id}${i}`);
-      });
-    };
     newContainer.appendChild(close);
+
     const normalizedData = this.normalizeData(data);
 
     const newChart = new Chart(`chart-${newId}`, newContainer, {
       data: this.mode == 'normalized' ? normalizedData : data,
       cull: true,
     });
+
+    newChart.addEventListener('render', this.handleRender);
+    close.addEventListener(
+      'click',
+      this.handleCloseClick.bind({
+        class: this,
+        container: newContainer,
+        chart: newChart,
+        index: this.charts.length,
+      })
+    );
     this.charts.push({
       container: newContainer,
       chart: newChart,
       data,
       normalizedData,
-    });
-
-    this.charts.forEach(({ chart }) => {
-      chart.addEventListener('render', (event) => {
-        this.charts.forEach(({ chart }) => {
-          if (chart.id != event.target.id) {
-            chart.setLimits(event.limits, true, false);
-          }
-        });
-      });
     });
   }
   normalizeData(data) {
@@ -76,7 +89,7 @@ export default class ChartContainer {
       if (data.y[i] > max) max = data.y[i];
       if (data.y[i] < min) min = data.y[i];
     }
-    console.log(min,max)
+    console.log(min, max);
     for (let i = 0; i < data.y.length; i++) {
       normalized.x.push(data.x[i]);
       normalized.y.push((data.y[i] - min) / (max - min));
@@ -86,8 +99,9 @@ export default class ChartContainer {
   }
   render() {
     console.log('rendering');
-    this.charts.forEach(({ chart }) => {
-      chart.chart.render;
+    this.charts.forEach(({ chart },index) => {
+      const newId = `chart-${this.id}-${index}`;
+      chart.updateID(newId);
     });
   }
 }

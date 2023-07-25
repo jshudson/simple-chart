@@ -250,6 +250,7 @@ class Chart {
     const [, xExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     const [, yExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     if (xExponent < -10 || yExponent < -10) return;
+    
     /**@type {Rectangle} */
     this.limits = { ...newLimits };
     this.triggerRenderEvent = triggerRenderEvent;
@@ -471,6 +472,7 @@ class Chart {
       this.chart.removeEventListener(type, callback);
     });
     this.parentResizeObserver.unobserve(this.parent);
+    window.removeEventListener('focus', this.render);
     this.chart.remove();
   }
 }
