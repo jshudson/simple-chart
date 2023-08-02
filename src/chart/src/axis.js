@@ -24,6 +24,7 @@ class Axis {
     this.format = options?.format || 'standard';
     this.label = options?.label || 'Units';
     this.visible = options?.visible == undefined ? true : options.visible;
+    this.dimension = this.direction == 'x' ? 25 : 50;
   }
   updateID(id) {
     this.id = `${id}-${this.direction}-axis`;
@@ -35,7 +36,7 @@ class Axis {
    * @returns {number}
    */
   getDimension(plotDimensions, range) {
-    return 50;
+    return this.dimension
     if (!this.visible) return 0;
     const temp = this.parent.appendChild(
       svg.newElement('g', {
@@ -130,11 +131,11 @@ class Axis {
    * @param {SVGGraphicsElement} parent SVG Parent
    */
   labelAxis(screenRange, range, parent) {
-    console.time('labeled axis')
-    console.time('label setup')
+    console.time('labeled axis');
+    console.time('label setup');
     const dataWidth = range[1] - range[0];
-    const tickSize = 5 * (this.direction == 'y' ? -1 : 1)
-    
+    const tickSize = 5 * (this.direction == 'y' ? -1 : 1);
+
     //minimum of 5 ticks for math to work
     const targetTickCount = Math.max(
       Math.ceil(
@@ -195,9 +196,9 @@ class Axis {
     const ticks = parent.appendChild(svg.newElement('g', {}));
 
     let prevTickLabelBox;
-    console.timeEnd('label setup')
+    console.timeEnd('label setup');
     tickPlotCoordinates.forEach((e, i) => {
-      console.time(`${this.direction}loop time${i}`)
+      console.time(`${this.direction}loop time${i}`);
       this.addTickLine(ticks, tickScreenCoordinates[i], tickSize);
       const tickLabelText = this.getFormattedText(
         e,
@@ -205,14 +206,14 @@ class Axis {
         exponentRange,
         roundedInterval
       );
-      console.time('add label')
+      console.time('add label');
       const newTickLabel = this.addTickLabel(
         tickLabelText,
         ticks,
         tickScreenCoordinates[i],
         screenRange[this.perpendicular][1]
       );
-      console.timeEnd('add label')
+      console.timeEnd('add label');
       //remove tick labels that overlap with stuff
       console.time('remove if needed');
       const tickLabelBox = newTickLabel.getBBox();
@@ -236,9 +237,9 @@ class Axis {
       }
       console.timeEnd('remove if needed');
       prevTickLabelBox = newTickLabel.getBBox();
-      console.timeEnd(`${this.direction}loop time${i}`)
+      console.timeEnd(`${this.direction}loop time${i}`);
     });
-    console.timeEnd('labeled axis')
+    console.timeEnd('labeled axis');
   }
   /**
    *
