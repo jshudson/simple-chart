@@ -62,7 +62,7 @@ class Plot {
 
           const interpolated = midPoint.x * m + b;
           culled = true;
-          if (Math.abs(interpolated - midPoint.y) >= 0.1) {
+          if (Math.abs(interpolated - midPoint.y) >= 0.5) {
             acc.x.push(midPoint.x);
             acc.y.push(midPoint.y);
             culled = false;
@@ -158,7 +158,6 @@ class Plot {
     return this.group;
   }
   render(limits, dimensions, points, integrals, cull = false) {
-    console.log(this.id)
     if (this.group) this.group.remove();
 
     const targetRect = {

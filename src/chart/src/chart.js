@@ -380,20 +380,26 @@ class Chart {
    * Render the Chart
    */
   render() {
+    
+    console.time(`${this.id} render`);
     this.readyForAnimationFrame = false;
-    //console.time(`${this.id} render`);
+    console.time('update dimensions')
     this.updateDimensions();
+    console.time('get padding')
     this.paddedLimits = this.getPadding(this.limits);
-
+    console.timeEnd('get padding')
+    console.time('xAxis pad')
     const xAxisPad = this.axes.x.getDimension(
       this.plotDimensions,
       this.paddedLimits.x
     );
+    console.timeEnd('xAxis pad')
+    console.time('yAxis pad')
     const yAxisPad = this.axes.y.getDimension(
       this.plotDimensions,
       this.paddedLimits.y
     );
-
+    console.timeEnd('yAxis pad')
     this.plotDimensions = {
       top: this.frame.top,
       left: this.frame.left + yAxisPad,
@@ -401,6 +407,8 @@ class Chart {
       height: this.height - this.frame.top - xAxisPad - this.frame.bottom,
     };
 
+    console.timeEnd('update dimensions')
+    console.time('render plot');
     this.plot.render(
       this.paddedLimits,
       this.plotDimensions,
@@ -408,9 +416,11 @@ class Chart {
       this.integrals,
       this.cull
     );
+    console.timeEnd('render plot');
+    console.time('render axes');
     this.axes.x.render(this.plotDimensions, this.paddedLimits.x);
     this.axes.y.render(this.plotDimensions, this.paddedLimits.y);
-
+    console.timeEnd('render axes');
     this.readyForAnimationFrame = true;
 
     if (this.onrender && this.triggerRenderEvent) {
@@ -422,7 +432,7 @@ class Chart {
         integrals: this.integrals,
       });
     }
-    // console.timeEnd(`${this.id} render`);
+    console.timeEnd(`${this.id} render`);
   }
   /**
    * Save the SVG Plot

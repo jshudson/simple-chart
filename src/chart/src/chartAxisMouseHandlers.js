@@ -115,6 +115,7 @@ export function handleMouseUp_Axis(event) {
  * @param {String} axis
  */
 export function handleWheel_Axis(event, axis) {
+  const perpendicularAxis = axis == 'x' ? 'y' : 'x';
   const scrollDirection = Math.sign(event.deltaY);
   const axisPlotCoord = this.chartScreenCoordinateToPlotCoordinate({
     x: event.offsetX,
@@ -127,6 +128,5 @@ export function handleWheel_Axis(event, axis) {
   ];
   const [, exponent] = getScientific(newCoords[1] - newCoords[0]);
   if (exponent < -10) return;
-  this.limits[axis] = [...newCoords];
-  this.render();
+  this.setLimits({[axis]: newCoords, [perpendicularAxis]: [...this.limits[perpendicularAxis]]})
 }

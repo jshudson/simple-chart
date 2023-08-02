@@ -15,6 +15,10 @@ class Axis {
   constructor(parent, id, direction, options) {
     this.parent = parent;
     this.direction = direction;
+    this.perpendicular = this.direction === 'x' ? 'y' : 'x';
+    this.baseline = this.direction === 'x' ? 'hanging' : 'middle';
+    this.anchor = this.direction === 'x' ? 'middle' : 'end';
+
     this.id = `${id}-${this.direction}-axis`;
 
     this.format = options?.format || 'standard';
@@ -31,6 +35,7 @@ class Axis {
    * @returns {number}
    */
   getDimension(plotDimensions, range) {
+    return 50;
     if (!this.visible) return 0;
     const temp = this.parent.appendChild(
       svg.newElement('g', {
@@ -76,9 +81,7 @@ class Axis {
         y: [plotDimensions.top + plotDimensions.height, plotDimensions.top],
       };
     }
-
     parent.setAttribute('transform', `translate(${offset.x},${offset.y})`);
-
     this.labelAxis(axisScreenCoords, range, parent);
     this.addBoundingRectangle(parent, axisScreenCoords);
   }
@@ -127,8 +130,11 @@ class Axis {
    * @param {SVGGraphicsElement} parent SVG Parent
    */
   labelAxis(screenRange, range, parent) {
+    console.time('labeled axis')
+    console.time('label setup')
     const dataWidth = range[1] - range[0];
-
+    const tickSize = 5 * (this.direction == 'y' ? -1 : 1)
+    
     //minimum of 5 ticks for math to work
     const targetTickCount = Math.max(
       Math.ceil(
@@ -151,7 +157,7 @@ class Axis {
 
     const tickPlotCoordinates = Array.from(
       { length: tickCount },
-      (e, i) => i * roundedInterval + firstTick
+      (_, i) => i * roundedInterval + firstTick
     );
 
     const tickScreenCoordinates = xform.transform1DArray(
@@ -189,23 +195,26 @@ class Axis {
     const ticks = parent.appendChild(svg.newElement('g', {}));
 
     let prevTickLabelBox;
-
+    console.timeEnd('label setup')
     tickPlotCoordinates.forEach((e, i) => {
-      this.addTickLine(ticks, tickScreenCoordinates[i], 5);
-
+      console.time(`${this.direction}loop time${i}`)
+      this.addTickLine(ticks, tickScreenCoordinates[i], tickSize);
       const tickLabelText = this.getFormattedText(
         e,
         extraDigits,
         exponentRange,
         roundedInterval
       );
+      console.time('add label')
       const newTickLabel = this.addTickLabel(
         tickLabelText,
         ticks,
         tickScreenCoordinates[i],
-        screenRange[this.direction == 'x' ? 'y' : 'x'][1]
+        screenRange[this.perpendicular][1]
       );
+      console.timeEnd('add label')
       //remove tick labels that overlap with stuff
+      console.time('remove if needed');
       const tickLabelBox = newTickLabel.getBBox();
 
       if (this.direction == 'x') {
@@ -225,8 +234,11 @@ class Axis {
           return;
         }
       }
+      console.timeEnd('remove if needed');
       prevTickLabelBox = newTickLabel.getBBox();
+      console.timeEnd(`${this.direction}loop time${i}`)
     });
+    console.timeEnd('labeled axis')
   }
   /**
    *
@@ -285,14 +297,12 @@ class Axis {
    * @returns {SVGGraphicsElement}
    */
   addTickLine(parent, coord, size) {
-    const perpendicular = this.direction === 'x' ? 'y' : 'x';
-    if (this.direction == 'y') size *= -1;
     return parent.appendChild(
       svg.newElement('line', {
         [`${this.direction}1`]: coord,
         [`${this.direction}2`]: coord,
-        [`${perpendicular}1`]: 0,
-        [`${perpendicular}2`]: size,
+        [`${this.perpendicular}1`]: 0,
+        [`${this.perpendicular}2`]: size,
         stroke: 'black',
       })
     );
@@ -306,15 +316,12 @@ class Axis {
    * @returns {SVGGraphicsElement}
    */
   addTickLabel(text, parent, coord, spacing) {
-    const perpendicular = this.direction === 'x' ? 'y' : 'x';
-    const baseline = this.direction === 'x' ? 'hanging' : 'middle';
-    const anchor = this.direction === 'x' ? 'middle' : 'end';
     const label = parent.appendChild(
       svg.newElement('text', {
         [this.direction]: coord,
-        [perpendicular]: spacing,
-        'dominant-baseline': baseline,
-        'text-anchor': anchor,
+        [this.perpendicular]: spacing,
+        'dominant-baseline': this.baseline,
+        'text-anchor': this.anchor,
       })
     );
     label.innerHTML = text;
