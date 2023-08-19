@@ -10,7 +10,7 @@ export default class ChartContainer {
 
     this.charts = [];
     this.id = id;
-    this.mode = 'normalized';
+    this.mode = 'total';
     this.handleRender = this.handleRender.bind(this);
     this.handleCloseClick = this.handleCloseClick.bind(this);
     this.addParentList();

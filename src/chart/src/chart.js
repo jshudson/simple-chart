@@ -250,7 +250,7 @@ class Chart {
     const [, xExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     const [, yExponent] = getScientific(newLimits.y[1] - newLimits.y[0]);
     if (xExponent < -10 || yExponent < -10) return;
-    
+
     /**@type {Rectangle} */
     this.limits = { ...newLimits };
     this.triggerRenderEvent = triggerRenderEvent;
@@ -380,34 +380,33 @@ class Chart {
    * Render the Chart
    */
   render() {
-    
     console.time(`${this.id} render`);
     this.readyForAnimationFrame = false;
-    console.time('update dimensions')
+    console.time('update dimensions');
     this.updateDimensions();
-    console.time('get padding')
+    console.time('get padding');
     this.paddedLimits = this.getPadding(this.limits);
-    console.timeEnd('get padding')
-    console.time('xAxis pad')
+    console.timeEnd('get padding');
+    console.time('xAxis pad');
     const xAxisPad = this.axes.x.getDimension(
       this.plotDimensions,
       this.paddedLimits.x
     );
-    console.timeEnd('xAxis pad')
-    console.time('yAxis pad')
+    console.timeEnd('xAxis pad');
+    console.time('yAxis pad');
     const yAxisPad = this.axes.y.getDimension(
       this.plotDimensions,
       this.paddedLimits.y
     );
-    console.timeEnd('yAxis pad')
+    console.timeEnd('yAxis pad');
     this.plotDimensions = {
       top: this.frame.top,
       left: this.frame.left + yAxisPad,
-      width: this.width - this.frame.left - yAxisPad - this.frame.right,
+      width: this.width - this.frame.left - yAxisPad - this.frame.right - 1,
       height: this.height - this.frame.top - xAxisPad - this.frame.bottom,
     };
 
-    console.timeEnd('update dimensions')
+    console.timeEnd('update dimensions');
     console.time('render plot');
     this.plot.render(
       this.paddedLimits,
